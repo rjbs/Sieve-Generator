@@ -1,32 +1,11 @@
 #!perl
 use v5.36.0;
-use lib 'lib';
+use lib 't/lib';
+
 use Sieve '-all';
+use Sieve::Test '-all';
 
-use Test2::API qw/context/;
-use Test::Differences;
 use Test::More;
-
-unified_diff;
-
-my $json = JSON::MaybeXS->new->pretty->canonical->encode({
-  masks => 0,
-  tea   => { ladygrey => 5, oolong => 0 },
-  soup  => [ qw( clam clam clam corn ) ],
-});
-
-sub sieve_is ($sieve, $expect, $desc) {
-  my $ctx = context();
-
-  my $bool = eq_or_diff(
-    $sieve->as_sieve,
-    $expect,
-    $desc,
-  );
-
-  $ctx->release;
-  return $bool;
-}
 
 sieve_is(
   sieve(
@@ -75,3 +54,5 @@ sieve_is(
   END
   "long but simple composite"
 );
+
+done_testing;
