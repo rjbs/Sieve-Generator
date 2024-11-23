@@ -4,28 +4,58 @@ use warnings;
 use lib 'lib';
 use Sieve '-all';
 
-say comment(lines(<<'END'))->as_sieve;
-END
-
-my $rule = lines(
-  1,
-  words("a", 2, "c"),
-  '',
-  [ qw(this is indented), [ qw(even more) ] ],
-  '',
-  cond("some-test", lines("foo", "bar")),
-  cond("blort", lines("this", "runs"), lines("the", "else", "block")),
-  3,
-);
-
-say $rule->as_sieve;
-say comment($rule)->as_sieve;
-
 my $json = JSON::MaybeXS->new->pretty->canonical->encode({
   masks => 0,
   tea   => { ladygrey => 5, oolong => 0 },
   soup  => [ qw( clam clam clam corn ) ],
 });
 
-say words("do thing", textblock($json))->as_sieve;
+my $rule = sieve(
+  comment("--- BEGIN SIEVE ---"),
+  1,
+  qstr("a"),
+  '',
+  block(qw(this is indented), block(qw(even more))),
+  '',
+  ifelse("some-test", block("foo", "bar")),
+  ifelse(
+    terms(qw(check :massively), qstr("cool story")),
+    block("this", "runs"),
+    block("transmit", heredoc($json))
+  ),
+  3,
+  comment("--- END SIEVE ---"),
+);
+
+say $rule->as_sieve;
+
+say sieve(
+  terms("require", qstr([ qw(
+    fileinto reject vacation enotify envelope body relational regex subaddress
+    copy mailbox mboxmetadata servermetadata date index
+    comparator-i;ascii-numeric variables imap4flags editheader duplicate
+    vacation-seconds fcc vnd.cyrus.jmapquery vnd.cyrus.log mailboxid
+    special-use vnd.cyrus.snooze vnd.cyrus.imip
+    vnd.cyrus.implicit_keep_target
+  )]), ';'),
+  blank(),
+  ifelse(
+    anyof(
+      terms("pie :is baked"),
+      terms("cake :is iced"),
+    ),
+    block(terms("print", qstr("dessert!"))),
+
+    allof(
+      terms("turkey :is carved"),
+      anyof(
+        terms("rolls", ":are", qstr("buttered")),
+        fourpart(sides => are => [ qw(taters yams) ] => 'creamed'),
+      ),
+    ),
+    block(terms("print", qstr("dinner"))),
+
+    block(comment("...keep waiting...")),
+  )
+)->as_sieve;
 

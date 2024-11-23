@@ -1,185 +1,110 @@
-use v5.20.0;
-use warnings;
+use v5.36.0;
 
 package Sieve;
 
-use experimental qw(lexical_subs postderef signatures);
-
 use JSON::MaybeXS ();
 
-use Safe::Isa ();
-our $_isa   = $Safe::Isa::_isa;
-our $_DOES  = $Safe::Isa::_DOES;
-
-use Params::Util qw(_ARRAY0);
-
-my sub _ARRAY0 { goto &Params::Util::_ARRAY0 }
-
-sub encode ($input) {
-  # Sieve strings and string lists are compatible with JSON
-  #  https://tools.ietf.org/html/rfc5228#section-2.4.2
-  # Keep everything as a unicode string
-  state $JSON ||= JSON::MaybeXS->new->utf8(0)->allow_nonref;
-  Carp::confess("can't encode undef") unless defined $input;
-
-  return $JSON->encode($input);
-}
-
 use Sub::Exporter -setup => [ qw(
+  blank
+  block
   comment
-  cond
-  lines
-  textblock
-  words
+  sieve
+  heredoc
+  ifelse
+
+  allof
+  anyof
+  noneof
+
+  fourpart
+  qstr
+  terms
 ) ];
 
+use Sieve::Lines::Block;
+use Sieve::Lines::Comment;
+use Sieve::Lines::Document;
+use Sieve::Lines::Heredoc;
+use Sieve::Lines::IfElse;
+use Sieve::Lines::Junction;
+use Sieve::Text::Qstr;
+use Sieve::Text::QstrList;
+use Sieve::Text::Terms;
+
 sub comment ($content) {
-  return Sieve::Block::Comment->new({
+  return Sieve::Lines::Comment->new({
     content => $content,
   });
 }
 
-sub cond ($cond, $true_lines, $false_lines = undef) {
-  return Sieve::Block::Cond->new({
-    cond  => $cond,
-    true  => $true_lines,
-    false => $false_lines,
+sub fourpart ($identifier, $tag, $arg1, $arg2) {
+  return Sieve::Text::Terms->new({
+    terms => [
+      $identifier,
+      ":$tag",
+      qstr($arg1),
+      qstr($arg2),
+    ],
   });
 }
 
-sub lines (@lines) {
-  return Sieve::Block::Lines->new({ lines => \@lines });
+sub ifelse ($cond, $if_true, @rest) {
+  my $else = @rest % 2 ? (pop @rest) : undef;
+
+  return Sieve::Lines::IfElse->new({
+    cond  => $cond,
+    true  => $if_true,
+    elses => \@rest,
+    ($else ? (else => $else) : ()),
+  });
 }
 
-sub textblock ($text) {
-  return Sieve::Block::TextBlock->new({ text => $text });
+sub blank () {
+  return Sieve::Lines::Document->new({ things => [] });
 }
 
-sub words (@words) {
-  return Sieve::Block::Words->new({ words => \@words });
+sub sieve (@things) {
+  return Sieve::Lines::Document->new({ things => \@things });
 }
 
-package Sieve::Block {
-  use Moo::Role;
-  use experimental qw(postderef signatures);
-
-  requires 'as_sieve';
-  no Moo::Role;
+sub block (@things) {
+  return Sieve::Lines::Block->new({ things => \@things });
 }
 
-package Sieve::Block::Comment {
-  use Moo;
-  use experimental qw(postderef signatures);
-  with 'Sieve::Block';
-
-  has content => (is => 'ro', required => 1);
-
-  sub as_sieve ($self, $i = undef) {
-    $i //= 0;
-    my $sieve  = $self->content->as_sieve(0);
-    my $indent = q{  } x $i;
-    $sieve =~ s/^/$indent# /gm;
-
-    return $sieve;
-  }
-
-  no Moo;
-};
-
-package Sieve::Block::Lines {
-  use Moo;
-  use experimental qw(postderef signatures);
-  with 'Sieve::Block';
-
-  has _lines => (is => 'ro', init_arg => 'lines', required => 1);
-  sub lines ($self) { $self->_lines->@* }
-
-  sub as_sieve ($self, $i = 0) {
-    my $class = ref $self;
-
-    my $str = q{};
-    my $indent = q{  } x $i;
-    for my $line ($self->lines) {
-      # TODO: This is bogus.  We should have a word/line type distinction.
-      $line = $line->$_DOES('Sieve::Block') ? $line->as_sieve($i)
-            : _ARRAY0($line)                ? $class->new(lines => $line)->as_sieve($i+1)
-            :                                 "$indent$line";
-
-      $line .= "\n" unless $line =~ /\n\z/;
-
-      $str .= $line;
-    }
-
-    return $str;
-  }
-
-  no Moo;
+sub allof (@things) {
+  return Sieve::Lines::Junction->new({
+    type => 'allof',
+    things => \@things,
+  });
 }
 
-package Sieve::Block::TextBlock {
-  use Moo;
-  use experimental qw(postderef signatures);
-  with 'Sieve::Block';
-
-  has text => (is => 'ro', required => 1);
-
-  sub as_sieve ($self, $i = undef) {
-    my $str = "text:\n" . $self->text;
-    $str .= "\n" unless $str =~ /\n\z/;
-    $str =~ s/^\./../mg;
-    return "$str.\n";
-  }
-
-  no Moo;
+sub anyof (@things) {
+  return Sieve::Lines::Junction->new({
+    type => 'anyof',
+    things => \@things,
+  });
 }
 
-package Sieve::Block::Words {
-  use Moo;
-  use experimental qw(postderef signatures);
-  with 'Sieve::Block';
-
-  has _words => (is => 'ro', init_arg => 'words', required => 1);
-  sub words ($self) { $self->_words->@* }
-
-  sub as_sieve ($self, $i = undef) {
-    my $str = (q{  } x ($i // 0))
-            . join q{ },
-              map {; ref($_) ? $_->as_sieve : $_ }
-              $self->words;
-
-    return $str;
-  }
-
-  no Moo;
+sub noneof (@things) {
+  return Sieve::Lines::Junction->new({
+    type => 'noneof',
+    things => \@things,
+  });
 }
 
-package Sieve::Block::Cond {
-  use Moo;
-  use experimental qw(postderef signatures);
-  with 'Sieve::Block';
+sub terms (@terms) {
+  return Sieve::Text::Terms->new({ terms => \@terms });
+}
 
-  has cond    => (is => 'ro', required => 1);
-  has _true   => (is => 'ro', required => 1, init_arg => 'true');
-  has _false  => (is => 'ro',                init_arg => 'false');
+sub heredoc ($text) {
+  return Sieve::Lines::Heredoc->new({ text => $text });
+}
 
-  sub as_sieve ($self, $i = undef) {
-    $i //= 0;
-    my $indent = q{  } x $i;
-    my $str = $indent
-            . q{if } . (ref $self->cond ? $self->cond->as_sieve(0) : $self->cond). " {\n"
-                     . $self->_true->as_sieve($i + 1);
-
-    if ($self->_false) {
-      $str .= "} else {\n";
-      $str .= $self->_false->as_sieve($i + 1);
-    }
-
-    $str .= "}\n";
-
-    return $str;
-  }
-
-  no Moo;
+sub qstr (@inputs) {
+  return map {;
+    ref ? Sieve::Text::QstrList->new({ strs => $_ })
+        : Sieve::Text::Qstr->new({ str => $_ })
+  } @inputs;
 }
 
 1;
