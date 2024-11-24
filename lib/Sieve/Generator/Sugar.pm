@@ -9,6 +9,7 @@ use Sub::Exporter -setup => [ qw(
   block
   command
   comment
+  set
   sieve
   heredoc
   ifelse
@@ -43,6 +44,13 @@ sub command ($identifier, @args) {
   return Sieve::Generator::Lines::Command->new({
     identifier => $identifier,
     args => \@args,
+  });
+}
+
+sub set ($var, $val) {
+  return Sieve::Generator::Lines::Command->new({
+    identifier => 'set',
+    args => [ qstr($var), qstr($val) ],
   });
 }
 

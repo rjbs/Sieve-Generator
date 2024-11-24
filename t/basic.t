@@ -105,10 +105,7 @@ sieve_is(
 );
 
 sieve_is(
-  ifelse(
-    'true',
-    block(command('stop'))
-  ),
+  ifelse('true', block(command('stop'))),
   <<~'END',
   if true {
     stop;
@@ -123,6 +120,23 @@ sieve_is(
   if true stop;
   END
   "single-command if, no block"
+);
+
+sieve_is(
+  ifelse(
+    'true',
+    block(
+      set('stopping', 'Y'),
+      command('stop')
+    )
+  ),
+  <<~'END',
+  if true {
+    set "stopping" "Y";
+    stop;
+  }
+  END
+  "the set sugar"
 );
 
 done_testing;
