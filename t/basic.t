@@ -9,7 +9,7 @@ use Test::More;
 
 sieve_is(
   sieve(
-    terms("require", qstr([ qw( food thanksgiving ) ]), ';'),
+    command("require", qstr([ qw( food thanksgiving ) ])),
     blank(),
     ifelse(
       anyof(
@@ -31,7 +31,7 @@ sieve_is(
     )
   ),
   <<~'END',
-  require [ "food", "thanksgiving" ] ;
+  require [ "food", "thanksgiving" ];
 
   if anyof(
     pie :is baked,
