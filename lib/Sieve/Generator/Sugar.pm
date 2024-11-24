@@ -7,6 +7,7 @@ use JSON::MaybeXS ();
 use Sub::Exporter -setup => [ qw(
   blank
   block
+  command
   comment
   sieve
   heredoc
@@ -22,6 +23,7 @@ use Sub::Exporter -setup => [ qw(
 ) ];
 
 use Sieve::Generator::Lines::Block;
+use Sieve::Generator::Lines::Command;
 use Sieve::Generator::Lines::Comment;
 use Sieve::Generator::Lines::Document;
 use Sieve::Generator::Lines::Heredoc;
@@ -37,14 +39,10 @@ sub comment ($content) {
   });
 }
 
-sub fourpart ($identifier, $tag, $arg1, $arg2) {
-  return Sieve::Generator::Text::Terms->new({
-    terms => [
-      $identifier,
-      ":$tag",
-      qstr($arg1),
-      qstr($arg2),
-    ],
+sub command ($identifier, @args) {
+  return Sieve::Generator::Lines::Command->new({
+    identifier => $identifier,
+    args => \@args,
   });
 }
 
@@ -98,6 +96,12 @@ sub terms (@terms) {
 
 sub heredoc ($text) {
   return Sieve::Generator::Lines::Heredoc->new({ text => $text });
+}
+
+sub fourpart ($identifier, $tag, $arg1, $arg2) {
+  return Sieve::Generator::Text::Terms->new({
+    terms => [ $identifier, ":$tag", qstr($arg1), qstr($arg2) ],
+  });
 }
 
 sub qstr (@inputs) {
