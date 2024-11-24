@@ -1,8 +1,8 @@
 use v5.36.0;
-package Sieve::Text::Terms;
+package Sieve::Generator::Text::Terms;
 
 use Moo;
-with 'Sieve::Text';
+with 'Sieve::Generator::Text';
 
 has terms => (is => 'ro', required => 1);
 

@@ -2,7 +2,7 @@
 use v5.20.0;
 use warnings;
 use lib 'lib';
-use Sieve '-all';
+use Sieve::Generator::Sugar '-all';
 
 my $json = JSON::MaybeXS->new->pretty->canonical->encode({
   masks => 0,

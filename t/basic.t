@@ -2,8 +2,8 @@
 use v5.36.0;
 use lib 't/lib';
 
-use Sieve '-all';
-use Sieve::Test '-all';
+use Sieve::Generator::Sugar '-all';
+use Test::GeneratedSieve '-all';
 
 use Test::More;
 

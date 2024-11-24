@@ -1,5 +1,5 @@
 use v5.36.0;
-package Sieve::Test;
+package Test::GeneratedSieve;
 
 use Test2::API qw/context/;
 use Test::Differences;
