@@ -59,13 +59,37 @@ sieve_is(
   ifelse(
     terms(specialuse_exists => qstr('\Snoozed')),
     block(
-      command(
-        snooze  => [ ':tzid'      => qstr('America/New_York') ],
-                   [ ':mailboxid' => qstr("000-111-222")      ],
-                   [ ':addflags'  => qstr([ '$new' ])         ],
-                   [ ':weekdays'  => qstr([ 1, 2, 5 ])        ],
-                   [ ':times'     => qstr([ '9:00', '12:00' ])],
+      command(snooze => ':tzid'      => qstr('America/New_York'),
+                        ':mailboxid' => qstr("000-111-222"),
+                        ':addflags'  => qstr([ '$new' ]),
+                        ':weekdays'  => qstr([ 1, 2, 5 ]),
+                        ':times'     => qstr([ '9:00', '12:00' ]),
       )
+    )
+  ),
+  <<~'END',
+  if specialuse_exists "\\Snoozed" {
+    snooze :tzid "America/New_York" :mailboxid "000-111-222" :addflags [ "$new" ] :weekdays [ "1", "2", "5" ] :times [ "9:00", "12:00" ];
+  }
+  END
+  "commands, generically formatted"
+);
+
+require Sieve::Generator::Lines::PrettyCommand;
+sieve_is(
+  ifelse(
+    terms(specialuse_exists => qstr('\Snoozed')),
+    block(
+      Sieve::Generator::Lines::PrettyCommand->new({
+        identifier => 'snooze',
+        arg_groups => [
+          [ ':tzid'      => qstr('America/New_York') ],
+          [ ':mailboxid' => qstr("000-111-222")      ],
+          [ ':addflags'  => qstr([ '$new' ])         ],
+          [ ':weekdays'  => qstr([ 1, 2, 5 ])        ],
+          [ ':times'     => qstr([ '9:00', '12:00' ])],
+        ]
+      })
     )
   ),
   <<~'END',
