@@ -7,6 +7,11 @@ with 'Sieve::Generator::Lines';
 has _things => (is => 'ro', init_arg => 'things', required => 1);
 sub things ($self) { $self->_things->@* }
 
+sub append ($self, @things) {
+  push $self->_things->@*, @things;
+  return;
+}
+
 sub as_sieve ($self, $i = 0) {
   my $class = ref $self;
 
