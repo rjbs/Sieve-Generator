@@ -34,8 +34,9 @@ use Sieve::Generator::Text::Qstr;
 use Sieve::Generator::Text::QstrList;
 use Sieve::Generator::Text::Terms;
 
-sub comment ($content) {
+sub comment ($content, $arg = undef) {
   return Sieve::Generator::Lines::Comment->new({
+    ($arg ? %$arg : ()),
     content => $content,
   });
 }

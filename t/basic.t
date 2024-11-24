@@ -139,4 +139,25 @@ sieve_is(
   "the set sugar"
 );
 
+sieve_is(
+  sieve(
+    comment("Important rule!!", { hashes => 3 }),
+    ifelse(
+      terms('jmapquery', qstr('{"someInThreadHaveKeyword":"$followed"}')),
+      block(
+        set('threadstatus', 'muted'),
+        command('addflag', qstr('$muted')),
+      ),
+    )
+  ),
+  <<~'END',
+  ### Important rule!!
+  if jmapquery "{\"someInThreadHaveKeyword\":\"$followed\"}" {
+    set "threadstatus" "muted";
+    addflag "$muted";
+  }
+  END
+  "multi-hash comment"
+);
+
 done_testing;

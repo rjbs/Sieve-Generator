@@ -5,6 +5,7 @@ use Moo;
 with 'Sieve::Generator::Lines';
 
 has content => (is => 'ro', required => 1);
+has hashes  => (is => 'ro', default  => 1);
 
 sub as_sieve ($self, $i = undef) {
   $i //= 0;
@@ -13,7 +14,8 @@ sub as_sieve ($self, $i = undef) {
             : $self->content;
 
   my $indent = q{  } x $i;
-  $sieve =~ s/^/$indent# /gm;
+  my $hashes = q{#} x $self->hashes;
+  $sieve =~ s/^/$indent$hashes /gm;
 
   return $sieve;
 }
