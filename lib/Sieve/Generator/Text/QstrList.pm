@@ -11,7 +11,7 @@ sub as_sieve ($self, $i = undef) {
 
   my $str = join q{, }, map {;
     defined || Carp::confess("can't encode undef"); # XXX
-    $JSON->encode($_)
+    $JSON->encode("$_")
   } $self->strs->@*;
 
   return (q{  } x ($i // 0)) . "[ $str ]";

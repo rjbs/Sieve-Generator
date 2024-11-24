@@ -13,7 +13,7 @@ sub as_sieve ($self, $i = undef) {
   state $JSON = JSON::MaybeXS->new->utf8(0)->allow_nonref;
   Carp::confess("can't encode undef") unless defined $self->str; # XXX
 
-  return (q{  } x ($i // 0)) . $JSON->encode($self->str);
+  return (q{  } x ($i // 0)) . $JSON->encode("" . $self->str);
 }
 
 no Moo;
