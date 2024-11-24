@@ -89,7 +89,7 @@ sieve_is(
           [ ':weekdays'  => qstr([ 1, 2, 5 ])        ],
           [ ':times'     => qstr([ '9:00', '12:00' ])],
         ]
-      })
+      }),
     )
   ),
   <<~'END',
@@ -102,6 +102,27 @@ sieve_is(
   }
   END
   "commands, prettily formatted"
+);
+
+sieve_is(
+  ifelse(
+    'true',
+    block(command('stop'))
+  ),
+  <<~'END',
+  if true {
+    stop;
+  }
+  END
+  "single-command if block"
+);
+
+sieve_is(
+  ifelse('true', command('stop')),
+  <<~'END',
+  if true stop;
+  END
+  "single-command if, no block"
 );
 
 done_testing;
