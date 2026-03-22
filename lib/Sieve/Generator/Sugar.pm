@@ -18,8 +18,15 @@ use Sub::Exporter -setup => [ qw(
   anyof
   noneof
 
+  bool
   fourpart
+  hasflag
+  header_exists
+  not_header_exists
+  not_string_test
   qstr
+  size
+  string_test
   terms
 ) ];
 
@@ -51,7 +58,10 @@ sub command ($identifier, @args) {
 sub set ($var, $val) {
   return Sieve::Generator::Lines::Command->new({
     identifier => 'set',
-    args => [ qstr($var), qstr($val) ],
+    args => [
+      Sieve::Generator::Text::Qstr->new({ str => $var }),
+      Sieve::Generator::Text::Qstr->new({ str => $val }),
+    ],
   });
 }
 
@@ -109,7 +119,14 @@ sub heredoc ($text) {
 
 sub fourpart ($identifier, $tag, $arg1, $arg2) {
   return Sieve::Generator::Text::Terms->new({
-    terms => [ $identifier, ":$tag", qstr($arg1), qstr($arg2) ],
+    terms => [
+      $identifier,
+      ":$tag",
+      (ref $arg1 ? Sieve::Generator::Text::QstrList->new({ strs => $arg1 })
+                 : Sieve::Generator::Text::Qstr->new({ str => $arg1 })),
+      (ref $arg2 ? Sieve::Generator::Text::QstrList->new({ strs => $arg2 })
+                 : Sieve::Generator::Text::Qstr->new({ str => $arg2 })),
+    ],
   });
 }
 
@@ -118,6 +135,48 @@ sub qstr (@inputs) {
     ref ? Sieve::Generator::Text::QstrList->new({ strs => $_ })
         : Sieve::Generator::Text::Qstr->new({ str => $_ })
   } @inputs;
+}
+
+sub header_exists ($header) {
+  return Sieve::Generator::Text::Terms->new({
+    terms => [ 'exists', Sieve::Generator::Text::Qstr->new({ str => $header }) ],
+  });
+}
+
+sub not_header_exists ($header) {
+  return Sieve::Generator::Text::Terms->new({
+    terms => [ 'not exists', Sieve::Generator::Text::Qstr->new({ str => $header }) ],
+  });
+}
+
+sub hasflag ($flag) {
+  return Sieve::Generator::Text::Terms->new({
+    terms => [ 'hasflag', Sieve::Generator::Text::Qstr->new({ str => $flag }) ],
+  });
+}
+
+sub string_test ($comparator, $key, $value) {
+  return Sieve::Generator::Text::Terms->new({
+    terms => [ "string :$comparator", $key, $value ],
+  });
+}
+
+sub not_string_test ($comparator, $key, $value) {
+  return Sieve::Generator::Text::Terms->new({
+    terms => [ "not string :$comparator", $key, $value ],
+  });
+}
+
+sub size ($comparator, $value) {
+  return Sieve::Generator::Text::Terms->new({
+    terms => [ "size :$comparator", $value ],
+  });
+}
+
+sub bool ($value) {
+  return Sieve::Generator::Text::Terms->new({
+    terms => [ $value ? 'true' : 'false' ],
+  });
 }
 
 1;
