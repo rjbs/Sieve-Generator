@@ -38,8 +38,7 @@ sieve_is(
     cake :is iced
   ) {
     print "dessert!"
-  }
-  elsif allof(
+  } elsif allof(
     turkey :is carved,
     anyof(
       rolls :are "buttered",
@@ -47,8 +46,7 @@ sieve_is(
     )
   ) {
     print "dinner"
-  }
-  else {
+  } else {
     # ...keep waiting...
   }
   END
@@ -328,8 +326,7 @@ sieve_is(
   if outer {
     if inner {
       stop;
-    }
-    else {
+    } else {
       keep;
     }
   }
