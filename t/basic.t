@@ -308,6 +308,35 @@ sieve_is(
   "document with plain string item"
 );
 
+# multiline condition indented correctly when nested
+sieve_is(
+  sieve(
+    ifelse(
+      'outer',
+      block(
+        ifelse(
+          anyof(
+            terms('foo :is bar'),
+            terms('baz :is qux'),
+          ),
+          block(command('stop')),
+        )
+      )
+    )
+  ),
+  <<~'END',
+  if outer {
+    if anyof(
+      foo :is bar,
+      baz :is qux
+    ) {
+      stop;
+    }
+  }
+  END
+  "multiline condition indented correctly when nested"
+);
+
 # else clause indentation when nested
 sieve_is(
   sieve(
