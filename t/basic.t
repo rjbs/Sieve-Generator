@@ -39,7 +39,7 @@ sieve_is(
   ) {
     print "dessert!"
   }
-  else if allof(
+  elsif allof(
     turkey :is carved,
     anyof(
       rolls :are "buttered",

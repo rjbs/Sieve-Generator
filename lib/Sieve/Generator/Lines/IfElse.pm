@@ -22,7 +22,7 @@ sub as_sieve ($self, $i = undef) {
     my $cond_str = ref $cond ? $cond->as_sieve(0) : $cond;
     chomp $cond_str;
 
-    my $if = $in_else ? "else if" : "if";
+    my $if = $in_else ? "elsif" : "if";
     $str .= $indent . qq{$if $cond_str } . $block->as_sieve($i);
     $in_else = 1;
   }
