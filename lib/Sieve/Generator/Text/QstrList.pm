@@ -1,8 +1,21 @@
 use v5.36.0;
 package Sieve::Generator::Text::QstrList;
+# ABSTRACT: a Sieve string list (a bracketed list of quoted strings)
 
 use Moo;
 with 'Sieve::Generator::Text';
+
+=head1 DESCRIPTION
+
+A C<QstrList> renders a list of Perl strings as a Sieve string list -- a
+comma-separated sequence of quoted strings enclosed in square brackets, as
+defined in RFC 5228 section 2.4.2.
+
+=attr strs
+
+This attribute holds the arrayref of strings to be encoded.
+
+=cut
 
 has strs => (is => 'ro', init_arg => 'strs', required => 1);
 

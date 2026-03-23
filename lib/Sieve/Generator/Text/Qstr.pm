@@ -1,14 +1,26 @@
 use v5.36.0;
 package Sieve::Generator::Text::Qstr;
+# ABSTRACT: a Sieve quoted string
 
 use Moo;
 with 'Sieve::Generator::Text';
+
+=head1 DESCRIPTION
+
+A C<Qstr> renders a single Perl string as a Sieve quoted string.
+
+=attr str
+
+This attribute holds the string to be quoted.
+
+=cut
 
 has str => (is => 'ro', init_arg => 'str', required => 1);
 
 sub as_sieve ($self, $i = undef) {
   # Sieve strings and string lists are compatible with JSON
-  #  https://tools.ietf.org/html/rfc5228#section-2.4.2
+  # https://tools.ietf.org/html/rfc5228#section-2.4.2
+  #
   # Keep everything as a unicode string
   state $JSON = JSON::MaybeXS->new->utf8(0)->allow_nonref;
   Carp::confess("can't encode undef") unless defined $self->str; # XXX

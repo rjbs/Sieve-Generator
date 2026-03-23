@@ -1,10 +1,31 @@
 use v5.36.0;
 package Sieve::Generator::Lines::Junction;
+# ABSTRACT: a Sieve allof/anyof/noneof test
 
 use Moo;
 with 'Sieve::Generator::Lines';
 
-# anyof, allof, noneof
+=head1 DESCRIPTION
+
+A junction renders a Sieve multi-test expression: C<allof(...)>,
+C<anyof(...)>, or C<not anyof(...)> (for C<noneof>).  Each contained test is
+rendered on its own indented line.
+
+=attr type
+
+This attribute holds the junction type.  It must be one of C<allof>,
+C<anyof>, or C<noneof>.
+
+=cut
+
+=attr things
+
+This attribute holds the list of tests in the junction.  Each may be a plain
+string or an object doing L<Sieve::Generator::Lines> or
+L<Sieve::Generator::Text>.
+
+=cut
+
 has type => (is => 'ro', required => 1);
 
 has _things => (is => 'ro', init_arg => 'things', required => 1);
