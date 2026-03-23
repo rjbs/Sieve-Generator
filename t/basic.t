@@ -310,6 +310,33 @@ sieve_is(
   "document with plain string item"
 );
 
+# else clause indentation when nested
+sieve_is(
+  sieve(
+    ifelse(
+      'outer',
+      block(
+        ifelse(
+          'inner',
+          block(command('stop')),
+          block(command('keep')),
+        )
+      )
+    )
+  ),
+  <<~'END',
+  if outer {
+    if inner {
+      stop;
+    }
+    else {
+      keep;
+    }
+  }
+  END
+  "else clause indented correctly when nested"
+);
+
 # IfElse constructed directly without elses attribute
 sieve_is(
   Sieve::Generator::Lines::IfElse->new({

@@ -28,7 +28,7 @@ sub as_sieve ($self, $i = undef) {
   }
 
   if ($self->else) {
-    $str .= "else " . $self->else->as_sieve($i);
+    $str .= $indent . "else " . $self->else->as_sieve($i);
   }
 
   return $str;
