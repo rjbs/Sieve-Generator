@@ -126,7 +126,7 @@ sub command ($identifier, @args) {
                          : blessed($v)  ? [ $v ]
                          : !ref $v      ? [ Sieve::Generator::Text::Qstr->new({ str => $v }) ]
                          : _ARRAY0($v)  ? [ Sieve::Generator::Text::QstrList->new({ strs => $v }) ]
-                         : _SCALAR0($v) ? [ Sieve::Generator::Text::Terms->new({ terms => [$v] }) ]
+                         : _SCALAR0($v) ? [ Sieve::Generator::Text::Terms->new({ terms => [$$v] }) ]
                          : Carp::confess("unknown reference type $v passed in Sieve command sugar's tagged args");
     }
   }
