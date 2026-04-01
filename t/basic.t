@@ -57,50 +57,62 @@ sieve_is(
   ifelse(
     terms(specialuse_exists => qstr('\Snoozed')),
     block(
-      command(snooze => ':tzid'      => qstr('America/New_York'),
-                        ':mailboxid' => qstr("000-111-222"),
-                        ':addflags'  => qstr([ '$new' ]),
-                        ':weekdays'  => qstr([ 1, 2, 5 ]),
-                        ':times'     => qstr([ '9:00', '12:00' ]),
-      )
-    )
-  ),
-  <<~'END',
-  if specialuse_exists "\\Snoozed" {
-    snooze :tzid "America/New_York" :mailboxid "000-111-222" :addflags [ "$new" ] :weekdays [ "1", "2", "5" ] :times [ "9:00", "12:00" ];
-  }
-  END
-  "commands, generically formatted"
-);
-
-require Sieve::Generator::Lines::PrettyCommand;
-sieve_is(
-  ifelse(
-    terms(specialuse_exists => qstr('\Snoozed')),
-    block(
-      Sieve::Generator::Lines::PrettyCommand->new({
-        identifier => 'snooze',
-        arg_groups => [
-          [ ':tzid'      => qstr('America/New_York') ],
-          [ ':mailboxid' => qstr("000-111-222")      ],
-          [ ':addflags'  => qstr([ '$new' ])         ],
-          [ ':weekdays'  => qstr([ 1, 2, 5 ])        ],
-          [ ':times'     => qstr([ '9:00', '12:00' ])],
-        ]
+      command(snooze => {
+        'addflags'  => qstr([ '$new' ]),
+        'mailboxid' => qstr("000-111-222"),
+        'times'     => qstr([ '9:00', '12:00' ]),
+        'tzid'      => qstr('America/New_York'),
+        'weekdays'  => qstr([ 1, 2, 5 ])
       }),
     )
   ),
   <<~'END',
   if specialuse_exists "\\Snoozed" {
-    snooze :tzid "America/New_York"
+    snooze :addflags [ "$new" ]
            :mailboxid "000-111-222"
-           :addflags [ "$new" ]
-           :weekdays [ "1", "2", "5" ]
-           :times [ "9:00", "12:00" ];
+           :times [ "9:00", "12:00" ]
+           :tzid "America/New_York"
+           :weekdays [ "1", "2", "5" ];
   }
   END
-  "commands, prettily formatted"
+  "commands, generically formatted"
 );
+
+{
+  my $snooze = Sieve::Generator::Lines::Command->new({
+    identifier  => 'snooze',
+    tagged_args => {
+      addflags  => [ qstr([ '$new' ]) ],
+      mailboxid => [ qstr("000-111-222") ],
+      times     => [ qstr([ '9:00', '12:00' ]) ],
+      tzid      => [ qstr('America/New_York') ],
+      weekdays  => [ qstr([ 1, 2, 5 ]) ],
+    }
+  });
+
+  sieve_is(
+    ifelse(
+      terms(specialuse_exists => qstr('\Snoozed')),
+      block($snooze),
+    ),
+    <<~'END',
+    if specialuse_exists "\\Snoozed" {
+      snooze :addflags [ "$new" ]
+             :mailboxid "000-111-222"
+             :times [ "9:00", "12:00" ]
+             :tzid "America/New_York"
+             :weekdays [ "1", "2", "5" ];
+    }
+    END
+    "commands, prettily formatted"
+  );
+
+  is(
+    $snooze->_as_sieve_oneline,
+    qq{snooze :addflags [ "\$new" ] :mailboxid "000-111-222" :times [ "9:00", "12:00" ] :tzid "America/New_York" :weekdays [ "1", "2", "5" ];\n},
+    "can force long command to be one line",
+  );
+}
 
 sieve_is(
   ifelse('true', block(command('stop'))),
@@ -383,46 +395,5 @@ sieve_is(
   $doc->append(command('keep'));
   sieve_is($doc, "stop;\nkeep;\n", "Document::append");
 }
-
-# PrettyCommand::args flattens arg_groups
-{
-  my $cmd = Sieve::Generator::Lines::PrettyCommand->new({
-    identifier => 'snooze',
-    arg_groups => [
-      [ ':tzid', qstr('UTC') ],
-      ':standalone',
-    ],
-  });
-  my @args = $cmd->args;
-  is(@args, 3, 'PrettyCommand::args flattens array groups');
-}
-
-# fourpart with plain arg1 and plain arg2 (covers Qstr branch for arg1)
-sieve_is(
-  ifelse(
-    fourpart(header => is => 'Subject' => 'Hello'),
-    block(command('stop'))
-  ),
-  <<~'END',
-  if header :is "Subject" "Hello" {
-    stop;
-  }
-  END
-  "fourpart with plain arg1 and plain arg2"
-);
-
-# fourpart with ref arg2 (covers QstrList branch for arg2)
-sieve_is(
-  ifelse(
-    fourpart(header => contains => 'From' => [qw(alice@example.com bob@example.com)]),
-    block(command('stop'))
-  ),
-  <<~'END',
-  if header :contains "From" [ "alice@example.com", "bob@example.com" ] {
-    stop;
-  }
-  END
-  "fourpart with ref arg2"
-);
 
 done_testing;

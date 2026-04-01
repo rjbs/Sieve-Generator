@@ -4,6 +4,10 @@ package Sieve::Generator::Sugar;
 # ABSTRACT: constructor functions for building Sieve generator objects
 
 use JSON::MaybeXS ();
+use Params::Util qw(_ARRAY0 _HASH0 _SCALAR0);
+
+use experimental 'builtin', 'for_list';
+use builtin 'blessed';
 
 use Sub::Exporter -setup => [ qw(
   blank
@@ -97,7 +101,7 @@ sub comment ($content, $arg = undef) {
 
 =func command
 
-  my $cmd = command($identifier, @args);
+  my $cmd = command($identifier, (\%tagged?), @args);
 
 This function creates a L<Sieve::Generator::Lines::Command> with the given
 identifier and arguments.  Arguments may be plain strings or objects doing
@@ -107,9 +111,29 @@ Sieve statement.
 =cut
 
 sub command ($identifier, @args) {
+  my $tagged_args;
+
+  if (@args && _HASH0($args[0]) && !blessed($args[0])) {
+    my $tagged_input = shift @args;
+
+    for my ($k, $v) (%$tagged_input) {
+      # The underlying data structure is designed so we can represent this:
+      #
+      #   :arg v1 v2 v3
+      #
+      # ...but there's currently
+      $tagged_args->{$k} = blessed($v)  ? [ $v ]
+                         : !ref $v      ? [ Sieve::Generator::Text::Qstr->new({ str => $v }) ]
+                         : _ARRAY0($v)  ? [ Sieve::Generator::Text::QstrList->new({ strs => $v }) ]
+                         : _SCALAR0($v) ? [ Sieve::Generator::Text::Terms->new({ terms => [$v] }) ]
+                         : Carp::confess("unknown reference type $v passed in Sieve command sugar");
+    }
+  }
+
   return Sieve::Generator::Lines::Command->new({
-    identifier => $identifier,
-    args => \@args,
+    identifier  => $identifier,
+    tagged_args => $tagged_args // {},
+    positional_args => \@args,
   });
 }
 
@@ -126,7 +150,7 @@ quoted as Sieve strings.
 sub set ($var, $val) {
   return Sieve::Generator::Lines::Command->new({
     identifier => 'set',
-    args => [
+    positional_args => [
       Sieve::Generator::Text::Qstr->new({ str => $var }),
       Sieve::Generator::Text::Qstr->new({ str => $val }),
     ],
