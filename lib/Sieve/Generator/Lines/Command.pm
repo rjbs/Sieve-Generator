@@ -100,14 +100,14 @@ sub _as_sieve_multiline ($self, $i = undef) {
     $pair_queue[$i] = ":$pair_queue[$i]";
   }
 
-  push @pair_queue, map {; [ $_, [] ] } $self->positional_args;
+  push @pair_queue, map {; $_->as_sieve(0), [] } $self->positional_args;
 
   while (my ($name, $values) = splice @pair_queue, 0, 2) {
     $str .= $n++ ? "$indent$indent2" : q{ };
     $str .= "$name";
 
     if (@$values) {
-      $str .= " " . join(q{ }, map {; $_->as_sieve(0) } @$values);
+      $str .= " " . join(q{ }, map {; ref ? $_->as_sieve(0) : $_ } @$values);
     }
 
     $str .= ";" unless @pair_queue;
