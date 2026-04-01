@@ -35,6 +35,18 @@ has semicolon => (
   default => 1,
 );
 
+=attr autowrap
+
+This attribute can be set false during construction to suppress automatic
+multiline formatting if this command runs lone.
+
+=cut
+
+has autowrap => (
+  is => 'ro',
+  default => 1,
+);
+
 =attr tagged_args
 
 This attribute holds the list of tagged arguments to the command, given as a
@@ -74,7 +86,7 @@ sub positional_args { $_[0]->_positional_args->@* }
 sub as_sieve ($self, $i = undef) {
   my $oneline = $self->_as_sieve_oneline($i);
 
-  if (length $oneline < 72) {
+  if (!$self->autowrap || length $oneline < 72) {
     return $oneline;
   }
 

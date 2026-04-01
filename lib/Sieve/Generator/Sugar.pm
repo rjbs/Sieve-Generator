@@ -163,7 +163,7 @@ commands and tests are I<nearly> the same thing.
 =cut
 
 sub test ($identifier, @args) {
-  _command($identifier, { semicolon => 0 }, @args);
+  _command($identifier, { autowrap => 0, semicolon => 0 }, @args);
 }
 
 =func set
