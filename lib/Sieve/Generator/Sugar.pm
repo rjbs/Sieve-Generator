@@ -25,7 +25,6 @@ use Sub::Exporter -setup => [ qw(
   noneof
 
   bool
-  fourpart
   hasflag
   header_exists
   not_header_exists
@@ -332,31 +331,6 @@ C<..>.
 
 sub heredoc ($text) {
   return Sieve::Generator::Lines::Heredoc->new({ text => $text });
-}
-
-=func fourpart
-
-  my $test = fourpart($identifier, $tag, $arg1, $arg2);
-
-This function creates a L<Sieve::Generator::Text::Terms> representing a
-four-part Sieve test of the form C<identifier :tag arg1 arg2>.  C<$identifier>
-and C<$tag> are used as-is (with C<:> prepended to C<$tag>); C<$arg1> and
-C<$arg2> are each quoted automatically, with array references becoming Sieve
-string lists and plain scalars becoming quoted strings.
-
-=cut
-
-sub fourpart ($identifier, $tag, $arg1, $arg2) {
-  return Sieve::Generator::Text::Terms->new({
-    terms => [
-      $identifier,
-      ":$tag",
-      (ref $arg1 ? Sieve::Generator::Text::QstrList->new({ strs => $arg1 })
-                 : Sieve::Generator::Text::Qstr->new({ str => $arg1 })),
-      (ref $arg2 ? Sieve::Generator::Text::QstrList->new({ strs => $arg2 })
-                 : Sieve::Generator::Text::Qstr->new({ str => $arg2 })),
-    ],
-  });
 }
 
 =func qstr

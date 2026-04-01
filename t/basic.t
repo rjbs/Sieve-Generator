@@ -22,7 +22,7 @@ sieve_is(
         terms("turkey :is carved"),
         anyof(
           terms("rolls", ":are", qstr("buttered")),
-          fourpart(sides => are => [ qw(taters yams) ] => 'creamed'),
+          test(sides => { are => [ qw(taters yams) ] } => 'creamed'),
         ),
       ),
       block(terms("print", qstr("dinner"))),
