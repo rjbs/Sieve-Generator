@@ -84,6 +84,12 @@ sieve_is(
   "tagged arg with no value",
 );
 
+sieve_is(
+  test('whatever', { novalue => undef }, 'xyzzy'),
+  qq{whatever :novalue "xyzzy"\n},
+  "test is a command without a semicolon",
+);
+
 {
   my $snooze = Sieve::Generator::Lines::Command->new({
     identifier  => 'snooze',

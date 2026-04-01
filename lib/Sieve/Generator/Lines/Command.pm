@@ -22,6 +22,19 @@ C<fileinto>, or C<require>.
 
 has identifier  => (is => 'ro', required => 1);
 
+=attr semicolon
+
+This attribute can be set to false during construction to suppress its trailing
+semicolon.  This is useful for making tests, which are just commands without
+semicolons or blocks after them.
+
+=cut
+
+has semicolon => (
+  is => 'ro',
+  default => 1,
+);
+
 =attr tagged_args
 
 This attribute holds the list of tagged arguments to the command, given as a
@@ -83,7 +96,8 @@ sub _as_sieve_oneline ($self, $i = undef) {
 
   $str .= ' ' . (ref $_ ? $_->as_sieve(0) : $_) for $self->positional_args;
 
-  $str .= ";\n";
+  $str .= ";" if $self->semicolon;
+  $str .= "\n";
 
   return $str;
 }
@@ -110,7 +124,7 @@ sub _as_sieve_multiline ($self, $i = undef) {
       $str .= " " . join(q{ }, map {; ref ? $_->as_sieve(0) : $_ } @$values);
     }
 
-    $str .= ";" unless @pair_queue;
+    $str .= ";" if $self->semicolon && !@pair_queue;
     $str .= "\n";
   }
 

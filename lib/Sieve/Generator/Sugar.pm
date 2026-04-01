@@ -13,6 +13,7 @@ use Sub::Exporter -setup => [ qw(
   blank
   block
   command
+  test
   comment
   set
   sieve
@@ -110,7 +111,7 @@ Sieve statement.
 
 =cut
 
-sub command ($identifier, @args) {
+my sub _command ($identifier, $meta_arg, @args) {
   my $tagged_args;
 
   if (@args && _HASH0($args[0]) && !blessed($args[0])) {
@@ -139,10 +140,31 @@ sub command ($identifier, @args) {
                         } @args;
 
   return Sieve::Generator::Lines::Command->new({
+    %$meta_arg,
+
     identifier  => $identifier,
     tagged_args => $tagged_args // {},
     positional_args => \@autoquoted_args,
   });
+}
+
+sub command ($identifier, @args) {
+  _command($identifier, {}, @args);
+}
+
+=func test
+
+  my $test = test($identifier, (\%tagged?), @args);
+
+This function creates a L<Sieve::Generator::Lines::Command> with the given
+identifier and arguments -- and semicolon-at-the-end turned off.  In the
+future, this might produce a distinct object, but for now, and really in Sieve,
+commands and tests are I<nearly> the same thing.
+
+=cut
+
+sub test ($identifier, @args) {
+  _command($identifier, { semicolon => 0 }, @args);
 }
 
 =func set
