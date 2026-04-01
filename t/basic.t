@@ -78,6 +78,12 @@ sieve_is(
   "commands, generically formatted"
 );
 
+sieve_is(
+  command('whatever', { novalue => undef }, 'xyzzy'),
+  qq{whatever :novalue "xyzzy";\n},
+  "tagged arg with no value",
+);
+
 {
   my $snooze = Sieve::Generator::Lines::Command->new({
     identifier  => 'snooze',

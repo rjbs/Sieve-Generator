@@ -122,18 +122,26 @@ sub command ($identifier, @args) {
       #   :arg v1 v2 v3
       #
       # ...but there's currently
-      $tagged_args->{$k} = blessed($v)  ? [ $v ]
+      $tagged_args->{$k} = !defined $v  ? []
+                         : blessed($v)  ? [ $v ]
                          : !ref $v      ? [ Sieve::Generator::Text::Qstr->new({ str => $v }) ]
                          : _ARRAY0($v)  ? [ Sieve::Generator::Text::QstrList->new({ strs => $v }) ]
                          : _SCALAR0($v) ? [ Sieve::Generator::Text::Terms->new({ terms => [$v] }) ]
-                         : Carp::confess("unknown reference type $v passed in Sieve command sugar");
+                         : Carp::confess("unknown reference type $v passed in Sieve command sugar's tagged args");
     }
   }
+
+  my @autoquoted_args = map {;
+                           blessed($_)  ? $_
+                         : !ref $_      ? Sieve::Generator::Text::Qstr->new({ str => $_ })
+                         : _ARRAY0($_)  ? Sieve::Generator::Text::QstrList->new({ strs => $_ })
+                         : Carp::confess("unknown reference type $_ passed in Sieve command sugar's positional args");
+                        } @args;
 
   return Sieve::Generator::Lines::Command->new({
     identifier  => $identifier,
     tagged_args => $tagged_args // {},
-    positional_args => \@args,
+    positional_args => \@autoquoted_args,
   });
 }
 
