@@ -51,13 +51,13 @@ use Sieve::Generator::Text::Terms;
   use Sieve::Generator::Sugar '-all';
 
   my $script = sieve(
-    command('require', qstr([ qw(fileinto imap4flags) ])),
+    command('require', [ qw(fileinto imap4flags) ]),
     blank(),
     ifelse(
       header_exists('X-Spam'),
       block(
-        command('addflag', qstr('$Junk')),
-        command('fileinto', qstr('Spam')),
+        command('addflag', '$Junk'),
+        command('fileinto', 'Spam'),
       ),
     ),
   );
