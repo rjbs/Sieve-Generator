@@ -130,6 +130,7 @@ my sub _command ($identifier, $meta_arg, @args) {
                            blessed($_)  ? $_
                          : !ref $_      ? Sieve::Generator::Text::Qstr->new({ str => $_ })
                          : _ARRAY0($_)  ? Sieve::Generator::Text::QstrList->new({ strs => $_ })
+                         : _SCALAR0($_) ? Sieve::Generator::Text::Terms->new({ terms => [$$_] })
                          : Carp::confess("unknown reference type $_ passed in Sieve command sugar's positional args");
                         } @args;
 
