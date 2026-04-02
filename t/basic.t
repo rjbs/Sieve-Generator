@@ -183,23 +183,23 @@ sieve_is(
 );
 
 sieve_is(
-  ifelse(header_exists("X-Spam-Status"), block(command('stop'))),
+  ifelse(test(exists => "X-Spam-Status"), block(command('stop'))),
   <<~'END',
   if exists "X-Spam-Status" {
     stop;
   }
   END
-  "header_exists"
+  "header exists"
 );
 
 sieve_is(
-  ifelse(not_header_exists("X-Spam-Status"), block(command('stop'))),
+  ifelse(test('not exists', "X-Spam-Status"), block(command('stop'))),
   <<~'END',
   if not exists "X-Spam-Status" {
     stop;
   }
   END
-  "not_header_exists"
+  "header not exists"
 );
 
 sieve_is(
@@ -214,7 +214,7 @@ sieve_is(
 
 sieve_is(
   ifelse(
-    string_test('is', qstr('${stop}'), qstr('Y')),
+    test(string => { is => undef }, '${stop}', 'Y'),
     block(command('stop'))
   ),
   <<~'END',
@@ -227,7 +227,7 @@ sieve_is(
 
 sieve_is(
   ifelse(
-    not_string_test('is', qstr('${stop}'), qstr('Y')),
+    test('not string' => { is => undef }, '${stop}', 'Y'),
     block(command('stop'))
   ),
   <<~'END',
@@ -239,7 +239,7 @@ sieve_is(
 );
 
 sieve_is(
-  ifelse(size('over', '100K'), block(command('stop'))),
+  ifelse(test(size => { over => undef }, \'100K'), block(command('stop'))),
   <<~'END',
   if size :over 100K {
     stop;
