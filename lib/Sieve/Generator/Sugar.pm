@@ -30,7 +30,6 @@ use Sub::Exporter -setup => [ qw(
   not_header_exists
   not_string_test
   qstr
-  size
   string_test
   terms
 ) ];
@@ -430,22 +429,6 @@ the same arguments as L</string_test>.
 sub not_string_test ($comparator, $key, $value) {
   return Sieve::Generator::Text::Terms->new({
     terms => [ "not string :$comparator", $key, $value ],
-  });
-}
-
-=func size
-
-  my $test = size($comparator, $value);
-
-This function creates an RFC 5228 C<size> test using the given comparator
-(C<over> or C<under>) and size value (e.g. C<100K>).  The value is not quoted
-and is passed through as-is.
-
-=cut
-
-sub size ($comparator, $value) {
-  return Sieve::Generator::Text::Terms->new({
-    terms => [ "size :$comparator", $value ],
   });
 }
 
