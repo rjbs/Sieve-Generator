@@ -28,6 +28,8 @@ use Sub::Exporter -setup => [ qw(
   hasflag
   qstr
   terms
+  var_eq
+  var_ne
 ) ];
 
 use Sieve::Generator::Lines::Block;
@@ -378,6 +380,53 @@ depending on the truthiness of C<$value>.
 sub bool ($value) {
   return Sieve::Generator::Text::Terms->new({
     terms => [ $value ? 'true' : 'false' ],
+  });
+}
+
+=func var_eq
+
+  my $test = var_eq($var, $value);
+
+This produces a string "is" test checking that the given variable name equals
+the given value, by producing something like C<string :is "${$var}" "$value">.
+
+=cut
+
+sub var_eq ($var, $value) {
+  return Sieve::Generator::Lines::Command->new({
+    autowrap  => 0,
+    semicolon => 0,
+
+    identifier  => 'string',
+    tagged_args => { is => [] },
+    positional_args => [
+      Sieve::Generator::Text::Qstr->new({ str => "\${$var}" }),
+      qstr($value),
+    ],
+  });
+}
+
+=func var_ne
+
+  my $test = var_ne($var, $value);
+
+This produces an inverted string "is" test checking that the given variable
+name equals the given value, by producing something like C<not string :is
+"${$var}" "$value">.
+
+=cut
+
+sub var_ne ($var, $value) {
+  return Sieve::Generator::Lines::Command->new({
+    autowrap  => 0,
+    semicolon => 0,
+
+    identifier  => 'not string',
+    tagged_args => { is => [] },
+    positional_args => [
+      Sieve::Generator::Text::Qstr->new({ str => "\${$var}" }),
+      qstr($value),
+    ],
   });
 }
 

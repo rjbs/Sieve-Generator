@@ -408,4 +408,9 @@ sieve_is(
   sieve_is($doc, "stop;\nkeep;\n", "Document::append");
 }
 
+{
+  my $doc = sieve(var_eq(true => 'Y'));
+  sieve_is($doc, qq[string :is "\${true}" "Y"\n], "var_eq");
+}
+
 done_testing;
