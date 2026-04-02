@@ -26,11 +26,7 @@ use Sub::Exporter -setup => [ qw(
 
   bool
   hasflag
-  header_exists
-  not_header_exists
-  not_string_test
   qstr
-  string_test
   terms
 ) ];
 
@@ -353,38 +349,6 @@ sub qstr (@inputs) {
   } @inputs;
 }
 
-=func header_exists
-
-  my $test = header_exists($header);
-
-This function creates an RFC 5228 C<exists> test that is true if the named
-header field is present in the message.  The C<$header> is automatically
-quoted as a Sieve string.
-
-=cut
-
-sub header_exists ($header) {
-  return Sieve::Generator::Text::Terms->new({
-    terms => [ 'exists', Sieve::Generator::Text::Qstr->new({ str => $header }) ],
-  });
-}
-
-=func not_header_exists
-
-  my $test = not_header_exists($header);
-
-This function creates a C<not exists> test that is true if the named header
-field is absent from the message.  The C<$header> is automatically quoted as
-a Sieve string.
-
-=cut
-
-sub not_header_exists ($header) {
-  return Sieve::Generator::Text::Terms->new({
-    terms => [ 'not exists', Sieve::Generator::Text::Qstr->new({ str => $header }) ],
-  });
-}
-
 =func hasflag
 
   my $test = hasflag($flag);
@@ -398,37 +362,6 @@ string.
 sub hasflag ($flag) {
   return Sieve::Generator::Text::Terms->new({
     terms => [ 'hasflag', Sieve::Generator::Text::Qstr->new({ str => $flag }) ],
-  });
-}
-
-=func string_test
-
-  my $test = string_test($comparator, $key, $value);
-
-This function creates an RFC 5229 C<string> test using the given comparator
-tag (e.g. C<is>, C<contains>, C<matches>).  The C<$key> and C<$value> should
-be objects doing L<Sieve::Generator::Text>, typically produced by L</qstr>.
-
-=cut
-
-sub string_test ($comparator, $key, $value) {
-  return Sieve::Generator::Text::Terms->new({
-    terms => [ "string :$comparator", $key, $value ],
-  });
-}
-
-=func not_string_test
-
-  my $test = not_string_test($comparator, $key, $value);
-
-This function creates the negation of an RFC 5229 C<string> test.  It accepts
-the same arguments as L</string_test>.
-
-=cut
-
-sub not_string_test ($comparator, $key, $value) {
-  return Sieve::Generator::Text::Terms->new({
-    terms => [ "not string :$comparator", $key, $value ],
   });
 }
 
