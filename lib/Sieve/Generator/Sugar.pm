@@ -26,6 +26,7 @@ use Sub::Exporter -setup => [ qw(
 
   bool
   hasflag
+  negate
   qstr
   terms
   var_eq
@@ -365,6 +366,25 @@ string.
 sub hasflag ($flag) {
   return Sieve::Generator::Text::Terms->new({
     terms => [ 'hasflag', Sieve::Generator::Text::Qstr->new({ str => $flag }) ],
+  });
+}
+
+=func negate
+
+  my $test = negate($inner_test);
+
+This function wraps C<$inner_test> in a Sieve C<not> test, producing output
+like C<not foo :is "bar">.
+
+=cut
+
+sub negate ($test) {
+  return Sieve::Generator::Lines::Command->new({
+    autowrap  => 0,
+    semicolon => 0,
+
+    identifier      => 'not',
+    positional_args => [ $test ],
   });
 }
 

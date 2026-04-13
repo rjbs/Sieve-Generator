@@ -408,6 +408,19 @@ sieve_is(
   sieve_is($doc, "stop;\nkeep;\n", "Document::append");
 }
 
+sieve_is(
+  ifelse(
+    negate(test(foo => { is => undef }, 'xyz')),
+    block(command('stop'))
+  ),
+  <<~'END',
+  if not foo :is "xyz" {
+    stop;
+  }
+  END
+  "negate wraps a test in not"
+);
+
 {
   my $doc = sieve(var_eq(true => 'Y'));
   sieve_is($doc, qq[string :is "\${true}" "Y"\n], "var_eq");

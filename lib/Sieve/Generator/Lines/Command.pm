@@ -106,7 +106,11 @@ sub _as_sieve_oneline ($self, $i = undef) {
     }
   }
 
-  $str .= ' ' . (ref $_ ? $_->as_sieve(0) : $_) for $self->positional_args;
+  for my $arg ($self->positional_args) {
+    my $rendered = ref $arg ? $arg->as_sieve(0) : $arg;
+    chomp $rendered;
+    $str .= " $rendered";
+  }
 
   $str .= ";" if $self->semicolon;
   $str .= "\n";
