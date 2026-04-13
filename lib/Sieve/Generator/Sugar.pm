@@ -27,6 +27,7 @@ use Sub::Exporter -setup => [ qw(
   bool
   hasflag
   negate
+  number
   qstr
   terms
   var_eq
@@ -40,6 +41,7 @@ use Sieve::Generator::Lines::Document;
 use Sieve::Generator::Lines::Heredoc;
 use Sieve::Generator::Lines::IfElse;
 use Sieve::Generator::Lines::Junction;
+use Sieve::Generator::Text::Num;
 use Sieve::Generator::Text::Qstr;
 use Sieve::Generator::Text::QstrList;
 use Sieve::Generator::Text::Terms;
@@ -330,6 +332,25 @@ C<..>.
 
 sub heredoc ($text) {
   return Sieve::Generator::Lines::Heredoc->new({ text => $text });
+}
+
+=func number
+
+  my $num = number($value);
+  my $num = number($value, $suffix);
+
+This function creates a L<Sieve::Generator::Text::Num> that renders as a
+Sieve numeric literal (RFC 5228 section 2.4.1).  The C<$value> must be a
+non-negative integer.  The optional C<$suffix> is a size quantifier: C<K>,
+C<M>, or C<G> (case insensitive).
+
+=cut
+
+sub number ($value, $suffix = undef) {
+  return Sieve::Generator::Text::Num->new({
+    value  => $value,
+    (defined $suffix ? (suffix => $suffix) : ()),
+  });
 }
 
 =func qstr

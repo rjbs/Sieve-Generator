@@ -249,13 +249,29 @@ sieve_is(
 );
 
 sieve_is(
-  ifelse(test(size => { over => undef }, \'100K'), block(command('stop'))),
+  ifelse(test(size => { over => undef }, number(100, 'K')), block(command('stop'))),
   <<~'END',
   if size :over 100K {
     stop;
   }
   END
-  "size"
+  "size with number"
+);
+
+sieve_is(
+  ifelse(test(size => { over => undef }, number(5, 'm')), block(command('stop'))),
+  <<~'END',
+  if size :over 5M {
+    stop;
+  }
+  END
+  "number with lowercase suffix is uppercased"
+);
+
+sieve_is(
+  command('whatever', number(42)),
+  qq{whatever 42;\n},
+  "number with no suffix"
 );
 
 sieve_is(
