@@ -3,6 +3,7 @@ use v5.36.0;
 use lib 't/lib';
 
 use Sieve::Generator::Sugar '-all';
+use Sieve::Generator::Element::BracketComment;
 use Test::GeneratedSieve '-all';
 
 use Test::More;
@@ -469,5 +470,46 @@ sieve_is(
   my $doc = sieve(var_eq(true => 'Y'));
   sieve_is($doc, qq[string :is "\${true}" "Y"\n], "var_eq");
 }
+
+# command with block
+sieve_is(
+  Sieve::Generator::Element::Command->new({
+    identifier => 'foreverypart',
+    block      => block(command('discard')),
+  }),
+  <<~'END',
+  foreverypart {
+    discard;
+  }
+  END
+  "command with block"
+);
+
+sieve_is(
+  Sieve::Generator::Element::Command->new({
+    identifier      => 'foreverypart',
+    tagged_args     => { name => [] },
+    block           => block(command('discard')),
+  }),
+  <<~'END',
+  foreverypart :name {
+    discard;
+  }
+  END
+  "command with tagged arg and block"
+);
+
+# bracket comment
+sieve_is(
+  sieve(
+    Sieve::Generator::Element::BracketComment->new({ content => 'this is a comment' }),
+    command('stop'),
+  ),
+  <<~'END',
+  /* this is a comment */
+  stop;
+  END
+  "bracket comment in a document"
+);
 
 done_testing;

@@ -47,6 +47,18 @@ has autowrap => (
   default => 1,
 );
 
+=attr block
+
+This attribute holds an optional L<Sieve::Generator::Element::Block> to render
+after the arguments instead of a semicolon.  This models the Sieve grammar rule
+C<command = identifier arguments ( ";" / block )> for commands like
+C<foreverypart> that take a block body.  When set, the C<semicolon> attribute
+is ignored.
+
+=cut
+
+has block => (is => 'ro');
+
 =attr tagged_args
 
 This attribute holds the list of tagged arguments to the command, given as a
@@ -112,7 +124,12 @@ sub _as_sieve_oneline ($self, $i = undef) {
     $str .= $str =~ /\n\z/ ? $rendered : " $rendered";
   }
 
-  $str .= ";" if $self->semicolon;
+  if ($self->block) {
+    my $blk = $self->block->as_sieve($i // 0);
+    $str .= $str =~ /\n\z/ ? $blk : " $blk";
+  } elsif ($self->semicolon) {
+    $str .= ";";
+  }
 
   return $str;
 }
@@ -139,8 +156,13 @@ sub _as_sieve_multiline ($self, $i = undef) {
       $str .= " " . join(q{ }, map {; ref ? $_->as_sieve(0) : $_ } @$values);
     }
 
-    $str .= ";" if $self->semicolon && !@pair_queue;
-    $str .= "\n" if @pair_queue;
+    if (@pair_queue) {
+      $str .= "\n";
+    } elsif ($self->block) {
+      $str .= " " . $self->block->as_sieve($i // 0);
+    } elsif ($self->semicolon) {
+      $str .= ";";
+    }
   }
 
   return $str;
