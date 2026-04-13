@@ -101,14 +101,15 @@ sub _as_sieve_oneline ($self, $i = undef) {
   my @tagged_pairs = $self->tagged_args;
   while (my ($name, $values) = splice @tagged_pairs, 0, 2) {
     $str .= " :$name";
-    if (@$values) {
-      $str .= " " . join(q{ }, map {; $_->as_sieve(0) } @$values);
+    for my $v (@$values) {
+      my $rendered = $v->as_sieve(0);
+      $str .= $str =~ /\n\z/ ? $rendered : " $rendered";
     }
   }
 
   for my $arg ($self->positional_args) {
     my $rendered = ref $arg ? $arg->as_sieve(0) : $arg;
-    $str .= " $rendered";
+    $str .= $str =~ /\n\z/ ? $rendered : " $rendered";
   }
 
   $str .= ";" if $self->semicolon;
