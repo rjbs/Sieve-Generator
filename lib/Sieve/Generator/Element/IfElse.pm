@@ -52,10 +52,8 @@ sub as_sieve ($self, $i = undef) {
   for my ($cond, $block) ($self->cond, $self->true, ($self->elsifs ? $self->elsifs->@* : ())) {
     my $cond_str = ref $cond ? $cond->as_sieve($i) : $cond;
     $cond_str =~ s/\A\Q$indent\E// if ref $cond;
-    chomp $cond_str;
 
     if ($in_else) {
-      chomp $str;
       $str .= " elsif $cond_str " . $block->as_sieve($i);
     } else {
       $str .= $indent . "if $cond_str " . $block->as_sieve($i);
@@ -64,7 +62,6 @@ sub as_sieve ($self, $i = undef) {
   }
 
   if ($self->else) {
-    chomp $str;
     $str .= " else " . $self->else->as_sieve($i);
   }
 

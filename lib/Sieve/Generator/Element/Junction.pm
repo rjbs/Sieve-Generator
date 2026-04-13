@@ -44,12 +44,11 @@ sub as_sieve ($self, $i = undef) {
   my @strs;
   for my $thing ($self->things) {
     my $substr = ref $thing ? $thing->as_sieve($i+1) : $thing;
-    chomp $substr;
     push @strs, $substr;
   }
 
   $str .= join qq{,\n}, @strs;
-  $str .= "\n${indent})\n";
+  $str .= "\n${indent})";
 
   return $str;
 }

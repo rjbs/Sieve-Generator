@@ -10,8 +10,12 @@ use Sub::Exporter -setup => [ qw( sieve_is ) ];
 sub sieve_is ($sieve, $expect, $desc) {
   my $ctx = context();
 
+  my $got = $sieve->as_sieve;
+  chomp $got;
+  chomp $expect;
+
   my $bool = eq_or_diff(
-    $sieve->as_sieve,
+    $got,
     $expect,
     $desc,
   );

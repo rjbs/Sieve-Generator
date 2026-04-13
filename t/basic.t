@@ -121,7 +121,7 @@ sieve_is(
 
   is(
     $snooze->_as_sieve_oneline,
-    qq{snooze :addflags [ "\$new" ] :mailboxid "000-111-222" :times [ "9:00", "12:00" ] :tzid "America/New_York" :weekdays [ "1", "2", "5" ];\n},
+    qq{snooze :addflags [ "\$new" ] :mailboxid "000-111-222" :times [ "9:00", "12:00" ] :tzid "America/New_York" :weekdays [ "1", "2", "5" ];},
     "can force long command to be one line",
   );
 }
@@ -425,6 +425,24 @@ sieve_is(
   }
   END
   "IfElse constructed directly with no elses"
+);
+
+# command with heredoc args
+sieve_is(
+  command('somecommand', { tag => heredoc("tag value") }, heredoc("first"), heredoc("second")),
+  <<~'END',
+  somecommand :tag text:
+  tag value
+  .
+  text:
+  first
+  .
+  text:
+  second
+  .
+  ;
+  END
+  "command with tagged and positional heredoc args"
 );
 
 # Document::append

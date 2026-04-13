@@ -31,12 +31,10 @@ sub as_sieve ($self, $i = 0) {
     my $text = ref $thing ? $thing->as_sieve($i+1)
              :              "$indent  $thing";
 
-    $text .= "\n" unless $text =~ /\n\z/;
-
-    $str .= $text;
+    $str .= "$text\n";
   }
 
-  return "{\n$str$indent}\n";
+  return "{\n$str$indent}";
 }
 
 1;

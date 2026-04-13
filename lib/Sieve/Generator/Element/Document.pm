@@ -44,9 +44,7 @@ sub as_sieve ($self, $i = 0) {
     my $text = ref $thing ? $thing->as_sieve($i)
              :              "$indent$thing";
 
-    $text .= "\n" unless $text =~ /\n\z/;
-
-    $str .= $text;
+    $str .= "$text\n";
   }
 
   return $str;
