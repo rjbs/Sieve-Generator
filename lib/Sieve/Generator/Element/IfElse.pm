@@ -1,9 +1,9 @@
 use v5.36.0;
-package Sieve::Generator::Lines::IfElse;
+package Sieve::Generator::Element::IfElse;
 # ABSTRACT: a Sieve if/elsif/else conditional construct
 
 use Moo;
-with 'Sieve::Generator::Lines';
+with 'Sieve::Generator::Element';
 
 =head1 DESCRIPTION
 
@@ -15,12 +15,12 @@ branch.
 =attr cond
 
 This attribute holds the condition for the C<if> clause.  It may be a plain
-string or an object doing L<Sieve::Generator::Text>.
+string or an object doing L<Sieve::Generator::Element>.
 
 =attr true
 
 This attribute holds the block or command to execute when the C<if> condition
-is true.  It should be an object doing L<Sieve::Generator::Lines>.
+is true.  It should be an object doing L<Sieve::Generator::Element>.
 
 =attr elsifs
 

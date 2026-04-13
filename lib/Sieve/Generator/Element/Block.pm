@@ -1,9 +1,9 @@
 use v5.36.0;
-package Sieve::Generator::Lines::Block;
+package Sieve::Generator::Element::Block;
 # ABSTRACT: a Sieve block (a brace-delimited sequence of statements)
 
 use Moo;
-with 'Sieve::Generator::Lines';
+with 'Sieve::Generator::Element';
 
 =head1 DESCRIPTION
 
@@ -15,8 +15,7 @@ line.
 =attr things
 
 This attribute holds the list of things that make up the block body.  Each
-may be an object doing either L<Sieve::Generator::Lines> or
-L<Sieve::Generator::Text>.
+may be an object doing L<Sieve::Generator::Element>.
 
 =cut
 

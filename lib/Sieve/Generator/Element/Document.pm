@@ -1,9 +1,9 @@
 use v5.36.0;
-package Sieve::Generator::Lines::Document;
+package Sieve::Generator::Element::Document;
 # ABSTRACT: a sequence of Sieve lines forming a complete script or blank line
 
 use Moo;
-with 'Sieve::Generator::Lines';
+with 'Sieve::Generator::Element';
 
 =head1 DESCRIPTION
 
@@ -15,8 +15,7 @@ line (when constructed by L<Sieve::Generator::Sugar/blank>).
 =attr things
 
 This attribute holds the list of things that make up the document.  Each may
-be a string or an object doing L<Sieve::Generator::Lines> or
-L<Sieve::Generator::Text>.
+be a string or an object doing L<Sieve::Generator::Element>.
 
 =cut
 

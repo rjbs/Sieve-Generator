@@ -1,9 +1,9 @@
 use v5.36.0;
-package Sieve::Generator::Text::Num;
+package Sieve::Generator::Element::Num;
 # ABSTRACT: a Sieve numeric literal
 
 use Moo;
-with 'Sieve::Generator::Text';
+with 'Sieve::Generator::Element';
 
 use Carp ();
 

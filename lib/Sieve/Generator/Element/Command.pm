@@ -1,9 +1,9 @@
 use v5.36.0;
-package Sieve::Generator::Lines::Command;
+package Sieve::Generator::Element::Command;
 # ABSTRACT: a single Sieve command statement
 
 use Moo;
-with 'Sieve::Generator::Lines';
+with 'Sieve::Generator::Element';
 
 use Params::Util qw(_ARRAY0);
 
@@ -51,7 +51,7 @@ has autowrap => (
 
 This attribute holds the list of tagged arguments to the command, given as a
 hashref.  The values in the hashref will be array references of objects doing
-L<Sieve::Generator::Text>, which will follow the tag name.
+L<Sieve::Generator::Element>, which will follow the tag name.
 
 The accessor will return a list of pairs.
 
@@ -71,7 +71,7 @@ sub tagged_args ($self) {
 =attr positional_args
 
 This attribute holds the list of positional arguments to the command.  Each
-argument should be an object doing L<Sieve::Generator::Text>.
+argument should be an object doing L<Sieve::Generator::Element>.
 
 =cut
 

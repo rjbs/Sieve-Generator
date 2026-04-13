@@ -1,9 +1,9 @@
 use v5.36.0;
-package Sieve::Generator::Lines::Junction;
+package Sieve::Generator::Element::Junction;
 # ABSTRACT: a Sieve allof/anyof/noneof test
 
 use Moo;
-with 'Sieve::Generator::Lines';
+with 'Sieve::Generator::Element';
 
 =head1 DESCRIPTION
 
@@ -21,8 +21,7 @@ C<anyof>, or C<noneof>.
 =attr things
 
 This attribute holds the list of tests in the junction.  Each may be a plain
-string or an object doing L<Sieve::Generator::Lines> or
-L<Sieve::Generator::Text>.
+string or an object doing L<Sieve::Generator::Element>.
 
 =cut
 

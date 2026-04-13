@@ -91,7 +91,7 @@ sieve_is(
 );
 
 {
-  my $snooze = Sieve::Generator::Lines::Command->new({
+  my $snooze = Sieve::Generator::Element::Command->new({
     identifier  => 'snooze',
     tagged_args => {
       addflags  => [ qstr([ '$new' ]) ],
@@ -415,7 +415,7 @@ sieve_is(
 
 # IfElse constructed directly without elses attribute
 sieve_is(
-  Sieve::Generator::Lines::IfElse->new({
+  Sieve::Generator::Element::IfElse->new({
     cond => 'true',
     true => block(command('stop')),
   }),

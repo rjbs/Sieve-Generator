@@ -1,9 +1,9 @@
 use v5.36.0;
-package Sieve::Generator::Text::Qstr;
+package Sieve::Generator::Element::Qstr;
 # ABSTRACT: a Sieve quoted string
 
 use Moo;
-with 'Sieve::Generator::Text';
+with 'Sieve::Generator::Element';
 
 =head1 DESCRIPTION
 

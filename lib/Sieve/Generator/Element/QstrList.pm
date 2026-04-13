@@ -1,9 +1,9 @@
 use v5.36.0;
-package Sieve::Generator::Text::QstrList;
+package Sieve::Generator::Element::QstrList;
 # ABSTRACT: a Sieve string list (a bracketed list of quoted strings)
 
 use Moo;
-with 'Sieve::Generator::Text';
+with 'Sieve::Generator::Element';
 
 =head1 DESCRIPTION
 

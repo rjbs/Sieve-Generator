@@ -1,9 +1,9 @@
 use v5.36.0;
-package Sieve::Generator::Lines::Heredoc;
+package Sieve::Generator::Element::Heredoc;
 # ABSTRACT: a Sieve multiline string (heredoc)
 
 use Moo;
-with 'Sieve::Generator::Lines';
+with 'Sieve::Generator::Element';
 
 =head1 DESCRIPTION
 
