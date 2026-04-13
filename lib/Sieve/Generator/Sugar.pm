@@ -364,8 +364,12 @@ string.
 =cut
 
 sub hasflag ($flag) {
-  return Sieve::Generator::Text::Terms->new({
-    terms => [ 'hasflag', Sieve::Generator::Text::Qstr->new({ str => $flag }) ],
+  return Sieve::Generator::Lines::Command->new({
+    autowrap  => 0,
+    semicolon => 0,
+
+    identifier      => 'hasflag',
+    positional_args => [ Sieve::Generator::Text::Qstr->new({ str => $flag }) ],
   });
 }
 

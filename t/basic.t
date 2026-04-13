@@ -213,6 +213,16 @@ sieve_is(
 );
 
 sieve_is(
+  ifelse(negate(hasflag('\Seen')), block(command('stop'))),
+  <<~'END',
+  if not hasflag "\\Seen" {
+    stop;
+  }
+  END
+  "negate(hasflag(...))"
+);
+
+sieve_is(
   ifelse(
     test(string => { is => undef }, '${stop}', 'Y'),
     block(command('stop'))
