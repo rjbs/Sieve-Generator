@@ -50,8 +50,8 @@ sub as_sieve ($self, $i = undef) {
 
   use experimental qw(for_list);
   for my ($cond, $block) ($self->cond, $self->true, ($self->elsifs ? $self->elsifs->@* : ())) {
-    my $cond_str = ref $cond ? $cond->as_sieve($i) : $cond;
-    $cond_str =~ s/\A\Q$indent\E// if ref $cond;
+    my $cond_str = $cond->as_sieve($i);
+    $cond_str =~ s/\A\Q$indent\E//;
 
     if ($in_else) {
       $str .= " elsif $cond_str " . $block->as_sieve($i);

@@ -120,7 +120,7 @@ sub _as_sieve_oneline ($self, $i = undef) {
   }
 
   for my $arg ($self->positional_args) {
-    my $rendered = ref $arg ? $arg->as_sieve(0) : $arg;
+    my $rendered = $arg->as_sieve(0);
     $str .= $str =~ /\n\z/ ? $rendered : " $rendered";
   }
 
@@ -153,7 +153,7 @@ sub _as_sieve_multiline ($self, $i = undef) {
     $str .= "$name";
 
     if (@$values) {
-      $str .= " " . join(q{ }, map {; ref ? $_->as_sieve(0) : $_ } @$values);
+      $str .= " " . join(q{ }, map {; $_->as_sieve(0) } @$values);
     }
 
     if (@pair_queue) {

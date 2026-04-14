@@ -9,8 +9,7 @@ with 'Sieve::Generator::Element';
 
 A block is the brace-delimited body of a Sieve C<if>, C<elsif>, or C<else>
 clause.  It contains an ordered list of things -- commands, nested
-conditionals, comments, or plain strings -- each rendered on its own indented
-line.
+conditionals, or comments -- each rendered on its own indented line.
 
 =attr things
 
@@ -28,8 +27,7 @@ sub as_sieve ($self, $i = 0) {
   my $str = q{};
   my $indent = q{  } x $i;
   for my $thing ($self->things) {
-    my $text = ref $thing ? $thing->as_sieve($i+1)
-             :              "$indent  $thing";
+    my $text = $thing->as_sieve($i+1);
 
     $str .= "$text\n";
   }

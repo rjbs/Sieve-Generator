@@ -417,14 +417,16 @@ sub negate ($test) {
 
   my $test = bool($value);
 
-This function returns a Terms representing a literal C<true> or C<false>
+This function returns a test representing a literal C<true> or C<false>
 depending on the truthiness of C<$value>.
 
 =cut
 
 sub bool ($value) {
-  return Sieve::Generator::Element::Terms->new({
-    terms => [ $value ? 'true' : 'false' ],
+  return Sieve::Generator::Element::Command->new({
+    autowrap  => 0,
+    semicolon => 0,
+    identifier => $value ? 'true' : 'false',
   });
 }
 

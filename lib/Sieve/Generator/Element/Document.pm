@@ -41,8 +41,7 @@ sub as_sieve ($self, $i = 0) {
   my $str = q{};
   my $indent = q{  } x $i;
   for my $thing ($self->things) {
-    my $text = ref $thing ? $thing->as_sieve($i)
-             :              "$indent$thing";
+    my $text = $thing->as_sieve($i);
 
     $str .= "$text\n";
   }

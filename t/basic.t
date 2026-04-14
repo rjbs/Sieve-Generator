@@ -128,7 +128,7 @@ sieve_is(
 }
 
 sieve_is(
-  ifelse('true', block(command('stop'))),
+  ifelse(test('true'), block(command('stop'))),
   <<~'END',
   if true {
     stop;
@@ -138,7 +138,7 @@ sieve_is(
 );
 
 sieve_is(
-  ifelse('true', command('stop')),
+  ifelse(test('true'), command('stop')),
   <<~'END',
   if true stop;
   END
@@ -147,7 +147,7 @@ sieve_is(
 
 sieve_is(
   ifelse(
-    'true',
+    test('true'),
     block(
       set('stopping', 'Y'),
       command('stop')
@@ -347,29 +347,29 @@ sieve_is(
   "comment with ref content"
 );
 
-# block with plain string item
+# block item built with command sugar
 sieve_is(
-  ifelse('true', block("keep;")),
+  ifelse(test('true'), block(command('keep'))),
   <<~'END',
   if true {
     keep;
   }
   END
-  "block with plain string item"
+  "block item built with command sugar"
 );
 
-# document with plain string item
+# document item built with command sugar
 sieve_is(
-  sieve("stop;"),
+  sieve(command('stop')),
   "stop;\n",
-  "document with plain string item"
+  "document item built with command sugar"
 );
 
 # multiline condition indented correctly when nested
 sieve_is(
   sieve(
     ifelse(
-      'outer',
+      test('outer'),
       block(
         ifelse(
           anyof(
@@ -398,10 +398,10 @@ sieve_is(
 sieve_is(
   sieve(
     ifelse(
-      'outer',
+      test('outer'),
       block(
         ifelse(
-          'inner',
+          test('inner'),
           block(command('stop')),
           block(command('keep')),
         )
@@ -423,7 +423,7 @@ sieve_is(
 # IfElse constructed directly without elses attribute
 sieve_is(
   Sieve::Generator::Element::IfElse->new({
-    cond => 'true',
+    cond => test('true'),
     true => block(command('stop')),
   }),
   <<~'END',
