@@ -300,13 +300,24 @@ sub _parse_arguments ($self) {
       my $tag_name = $tok->[1];
       my @values;
 
-      # Greedy: associate next value-like token with this tag
+      # Associate at most one value with the tag.  The RFC grammar allows
+      # zero or more, but no known command or extension uses more than one.
+      # Silently consuming extra values would misattribute positional args
+      # to the tag, so we croak if it looks like there are two in a row.
       $self->_skip_comments;
       my $next = $self->_peek_token;
       if ($next && $next->[0] =~ /\A(?:STRING|NUMBER|MULTILINE)\z/) {
         push @values, $self->_parse_atom;
       } elsif ($next && $next->[0] eq 'LBRACKET') {
         push @values, $self->_parse_string_list;
+      }
+
+      if (@values) {
+        $self->_skip_comments;
+        my $after = $self->_peek_token;
+        if ($after && $after->[0] =~ /\A(?:STRING|NUMBER|MULTILINE|LBRACKET)\z/) {
+          Carp::croak("multiple values after :$tag_name; expected at most one");
+        }
       }
 
       $tagged{$tag_name} = \@values;

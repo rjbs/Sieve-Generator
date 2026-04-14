@@ -242,4 +242,12 @@ parses_as(
   element_eq($parsed, $reparsed, "round-trip: parse-render-reparse is stable");
 }
 
+# -- error: multiple values after a tag -----------------------------------
+
+{
+  my $ok = eval { Sieve::Generator::Parser->parse('cmd :tag "v1" "v2";'); 1 };
+  ok(!$ok, "multiple values after tag croaks");
+  like($@, qr/multiple values after :tag/, "error message names the tag");
+}
+
 done_testing;
