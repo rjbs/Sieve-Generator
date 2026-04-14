@@ -296,28 +296,25 @@ sub _parse_arguments ($self) {
     last unless $tok;
 
     if ($tok->[0] eq 'TAG') {
+      # Once we've started accumulating positional args, a tag is
+      # unresolvable: we can't tell whether the positional args we already
+      # consumed should have been values of the previous tag.  No known
+      # Sieve command has this shape, so croak rather than guess wrong.
+      Carp::croak(
+        "tagged argument :$tok->[1] after positional arguments"
+      ) if @positional;
+
       $self->_consume_token;
       my $tag_name = $tok->[1];
       my @values;
 
-      # Associate at most one value with the tag.  The RFC grammar allows
-      # zero or more, but no known command or extension uses more than one.
-      # Silently consuming extra values would misattribute positional args
-      # to the tag, so we croak if it looks like there are two in a row.
+      # Greedily associate at most one following value with this tag.
       $self->_skip_comments;
       my $next = $self->_peek_token;
       if ($next && $next->[0] =~ /\A(?:STRING|NUMBER|MULTILINE)\z/) {
         push @values, $self->_parse_atom;
       } elsif ($next && $next->[0] eq 'LBRACKET') {
         push @values, $self->_parse_string_list;
-      }
-
-      if (@values) {
-        $self->_skip_comments;
-        my $after = $self->_peek_token;
-        if ($after && $after->[0] =~ /\A(?:STRING|NUMBER|MULTILINE|LBRACKET)\z/) {
-          Carp::croak("multiple values after :$tag_name; expected at most one");
-        }
       }
 
       $tagged{$tag_name} = \@values;

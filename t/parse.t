@@ -242,12 +242,23 @@ parses_as(
   element_eq($parsed, $reparsed, "round-trip: parse-render-reparse is stable");
 }
 
-# -- error: multiple values after a tag -----------------------------------
+# -- tag value followed by positional arg (valid) -------------------------
+
+parses_as(
+  'cmd :tag "v1" "v2";',
+  sieve(command('cmd', { tag => 'v1' }, 'v2')),
+  "tag with value followed by positional arg"
+);
+
+# -- error: tag after positional arguments --------------------------------
 
 {
-  my $ok = eval { Sieve::Generator::Parser->parse('cmd :tag "v1" "v2";'); 1 };
-  ok(!$ok, "multiple values after tag croaks");
-  like($@, qr/multiple values after :tag/, "error message names the tag");
+  my $ok = eval {
+    Sieve::Generator::Parser->parse('cmd :tagA "v1" "v2" :tagB "v3";');
+    1;
+  };
+  ok(!$ok, "tag after positional args croaks");
+  like($@, qr/tagged argument :tagB after positional/, "error message names the offending tag");
 }
 
 done_testing;
