@@ -21,6 +21,7 @@ be a string or an object doing L<Sieve::Generator::Element>.
 
 has _things => (is => 'ro', init_arg => 'things', required => 1);
 sub things ($self) { $self->_things->@* }
+sub children ($self) { $self->things }
 
 =method append
 

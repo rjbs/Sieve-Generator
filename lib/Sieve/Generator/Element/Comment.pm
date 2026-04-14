@@ -28,6 +28,8 @@ It defaults to C<1>.
 
 has hashes  => (is => 'ro', default  => 1);
 
+sub children ($self) { ref $self->content ? ($self->content) : () }
+
 sub as_sieve ($self, $i = undef) {
   $i //= 0;
   my $sieve = ref $self->content

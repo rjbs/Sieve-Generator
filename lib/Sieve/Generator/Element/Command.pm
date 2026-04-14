@@ -95,6 +95,20 @@ has _positional_args => (
 
 sub positional_args { $_[0]->_positional_args->@* }
 
+sub children ($self) {
+  my @children;
+
+  my @tagged_pairs = $self->tagged_args;
+  while (my ($name, $values) = splice @tagged_pairs, 0, 2) {
+    push @children, @$values;
+  }
+
+  push @children, $self->positional_args;
+  push @children, $self->block if $self->block;
+
+  return @children;
+}
+
 sub as_sieve ($self, $i = undef) {
   my $oneline = $self->_as_sieve_oneline($i);
 

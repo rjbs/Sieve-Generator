@@ -40,6 +40,13 @@ has true    => (is => 'ro', required => 1, init_arg => 'true');
 has elsifs  => (is => 'ro');
 has else    => (is => 'ro');
 
+sub children ($self) {
+  my @children = ($self->cond, $self->true);
+  push @children, $self->elsifs->@* if $self->elsifs;
+  push @children, $self->else if $self->else;
+  return @children;
+}
+
 sub as_sieve ($self, $i = undef) {
   $i //= 0;
   my $indent = q{  } x $i;

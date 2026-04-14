@@ -21,6 +21,8 @@ spaces when rendered.
 
 has terms => (is => 'ro', required => 1);
 
+sub children ($self) { grep { ref } $self->terms->@* }
+
 sub as_sieve ($self, $i = undef) {
   my $str = (q{  } x ($i // 0))
           . join q{ },

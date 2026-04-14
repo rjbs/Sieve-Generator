@@ -518,4 +518,44 @@ sieve_is(
   "bracket comment in a document"
 );
 
+# -- find_elements --------------------------------------------------------
+
+{
+  my $doc = sieve(
+    command('require', ['fileinto', 'imap4flags']),
+    blank(),
+    ifelse(
+      test(exists => 'X-Spam'),
+      block(
+        command('addflag', '$Junk'),
+        command('fileinto', 'Spam'),
+      ),
+    ),
+    command('keep'),
+  );
+
+  my @commands = $doc->find_elements(sub ($el) {
+    $el->isa('Sieve::Generator::Element::Command') && $el->semicolon
+  });
+  is(scalar @commands, 4, "find_elements: found all 4 commands");
+  is($commands[0]->identifier, 'require', "find_elements: first is require");
+  is($commands[3]->identifier, 'keep',    "find_elements: last is keep");
+
+  my @fileinto = $doc->find_elements(sub ($el) {
+    $el->isa('Sieve::Generator::Element::Command')
+      && $el->identifier eq 'fileinto'
+  });
+  is(scalar @fileinto, 1, "find_elements: found fileinto inside if block");
+
+  my @blocks = $doc->find_elements(sub ($el) {
+    $el->isa('Sieve::Generator::Element::Block')
+  });
+  is(scalar @blocks, 1, "find_elements: found the one block");
+
+  my @leaves = $doc->find_elements(sub ($el) {
+    $el->isa('Sieve::Generator::Element::Qstr')
+  });
+  is(scalar @leaves, 3, "find_elements: found 3 Qstr leaves");
+}
+
 done_testing;

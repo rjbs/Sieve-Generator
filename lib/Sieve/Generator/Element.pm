@@ -19,7 +19,34 @@ C<$indent_level> argument is a non-negative integer controlling the
 indentation depth; each level adds two spaces.  If not given, no indenting is
 added.
 
+=method children
+
+  my @children = $element->children;
+
+Returns all child Elements of this node.  Leaf nodes return an empty list.
+Container nodes return their direct children.  This is used by
+C<find_elements> to walk the tree.
+
 =cut
+
+sub children ($self) { () }
+
+=method find_elements
+
+  my @found = $element->find_elements(\&predicate);
+
+Walks the element tree depth-first, returning all elements (including
+C<$element> itself) for which the predicate returns true.  Descends into
+matching nodes, so all matches at any depth are returned.
+
+=cut
+
+sub find_elements ($self, $code) {
+  my @found;
+  push @found, $self if $code->($self);
+  push @found, $_->find_elements($code) for $self->children;
+  return @found;
+}
 
 requires 'as_sieve';
 
