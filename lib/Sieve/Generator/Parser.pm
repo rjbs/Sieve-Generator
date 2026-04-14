@@ -4,6 +4,138 @@ package Sieve::Generator::Parser;
 
 use Carp;
 
+# How many values each known tag consumes.  Grouped by RFC / capability.
+# Unknown tags fall back to the greedy heuristic (at most one value).
+my %TAG_ARITY = (
+  # RFC 5228 -- base Sieve
+  all        => 0,
+  comparator => 1,
+  contains   => 0,
+  copy       => 0,
+  domain     => 0,
+  is         => 0,
+  localpart  => 0,
+  matches    => 0,
+  over       => 0,
+  under      => 0,
+
+  # RFC 5229 -- variables
+  length        => 0,
+  lower         => 0,
+  lowerfirst    => 0,
+  upper         => 0,
+  upperfirst    => 0,
+  quotewildcard => 0,
+
+  # RFC 5230 -- vacation
+  addresses => 1,
+  days      => 1,
+  from      => 1,
+  handle    => 1,
+  mime      => 0,
+  subject   => 1,
+
+  # RFC 5231 -- relational
+  count => 1,
+  value => 1,
+
+  # RFC 5232 -- imap4flags
+  flags => 1,
+
+  # RFC 5233 -- subaddress
+  detail => 0,
+  user   => 0,
+
+  # RFC 5235 -- spamtest / virustest
+  percent => 0,
+
+  # RFC 5260 -- date / index
+  index        => 1,
+  last         => 0,
+  originalzone => 0,
+  zone         => 1,
+
+  # RFC 5293 -- editheader
+  # (index and last already listed above)
+
+  # RFC 5435 -- enotify
+  importance => 1,
+  message    => 1,
+  options    => 1,
+  # (from already listed above)
+
+  # RFC 5490 -- mailbox
+  create => 0,
+
+  # RFC 5703 -- mime / foreverypart / extracttext
+  anychild    => 0,
+  contenttype => 0,
+  first       => 1,
+  name        => 1,
+  param       => 1,
+  subtype     => 0,
+  type        => 0,
+  # (mime already listed above)
+
+  # RFC 6009 -- dsn / envelope-deliverby
+  bymode          => 1,
+  bytimeabsolute  => 1,
+  bytimerelative  => 1,
+  notify          => 1,
+  ret             => 1,
+
+  # RFC 6131 -- vacation-seconds
+  seconds => 1,
+
+  # RFC 6609 -- include
+  global   => 0,
+  once     => 0,
+  optional => 0,
+  personal => 0,
+
+  # RFC 7352 -- duplicate
+  header   => 1,
+  uniqueid => 1,
+  # (handle, seconds, last already listed above)
+
+  # RFC 8579 -- fcc
+  fcc => 1,
+
+  # RFC 8580 -- extlists
+  list => 0,
+
+  # RFC 9042 -- mailboxid
+  mailboxid => 1,
+
+  # draft-ietf-sieve-regex (widely implemented)
+  regex => 0,
+
+  # Snooze extension (JMAP / Fastmail)
+  addflags    => 1,
+  mailbox     => 1,
+  removeflags => 1,
+  times       => 1,
+  tzid        => 1,
+  weekdays    => 1,
+  # (mailboxid, create already listed above)
+
+  # special-use extension
+  specialuse => 1,
+);
+
+=method register_tag
+
+  Sieve::Generator::Parser->register_tag($name, $arity);
+
+Registers (or overrides) the arity of a tagged argument for the parser.
+C<$arity> is 0 for flags and 1 for tags that consume one value.
+
+=cut
+
+sub register_tag ($class, $name, $arity) {
+  $TAG_ARITY{$name} = $arity;
+}
+
 use Sieve::Generator::Element::Block;
 use Sieve::Generator::Element::BracketComment;
 use Sieve::Generator::Element::Command;
@@ -41,6 +173,14 @@ L<Sieve::Generator::Element::Command>.
 Parses the given Sieve script text and returns a
 L<Sieve::Generator::Element::Document>.
 
+=method parse_test
+
+  my $test = Sieve::Generator::Parser->parse_test($sieve_test_text);
+
+Parses the given text as a single Sieve test expression and returns the
+corresponding Element (a L<Sieve::Generator::Element::Command> with
+C<semicolon> off, or a L<Sieve::Generator::Element::Junction>).
+
 =cut
 
 sub parse ($class, $text) {
@@ -53,6 +193,18 @@ sub parse ($class, $text) {
   Carp::croak("unexpected token $tok->[0] at end of input") if $tok;
 
   return Sieve::Generator::Element::Document->new({ things => \@things });
+}
+
+sub parse_test ($class, $text) {
+  my $self = bless { text => $text, peeked => undef }, $class;
+  pos($self->{text}) = 0;
+
+  my $test = $self->_parse_test;
+
+  my $tok = $self->_peek_token;
+  Carp::croak("unexpected token $tok->[0] after test") if $tok;
+
+  return $test;
 }
 
 # -- Token peek/consume --------------------------------------------------
@@ -308,13 +460,19 @@ sub _parse_arguments ($self) {
       my $tag_name = $tok->[1];
       my @values;
 
-      # Greedily associate at most one following value with this tag.
-      $self->_skip_comments;
-      my $next = $self->_peek_token;
-      if ($next && $next->[0] =~ /\A(?:STRING|NUMBER|MULTILINE)\z/) {
-        push @values, $self->_parse_atom;
-      } elsif ($next && $next->[0] eq 'LBRACKET') {
-        push @values, $self->_parse_string_list;
+      # Consult the tag registry to decide how many values to consume.
+      # Known tags have an explicit arity (0 or 1).  Unknown tags fall
+      # back to the greedy heuristic: consume one value if available.
+      my $arity = $TAG_ARITY{$tag_name} // 1;
+
+      if ($arity) {
+        $self->_skip_comments;
+        my $next = $self->_peek_token;
+        if ($next && $next->[0] =~ /\A(?:STRING|NUMBER|MULTILINE)\z/) {
+          push @values, $self->_parse_atom;
+        } elsif ($next && $next->[0] eq 'LBRACKET') {
+          push @values, $self->_parse_string_list;
+        }
       }
 
       $tagged{$tag_name} = \@values;

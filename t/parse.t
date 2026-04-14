@@ -261,4 +261,41 @@ parses_as(
   like($@, qr/tagged argument :tagB after positional/, "error message names the offending tag");
 }
 
+# -- parse_test -----------------------------------------------------------
+
+my sub test_parses_as ($input, $expected, $desc) {
+  element_eq(
+    Sieve::Generator::Parser->parse_test($input),
+    $expected,
+    $desc,
+  );
+}
+
+test_parses_as(
+  'exists "X-Spam"',
+  test(exists => 'X-Spam'),
+  "parse_test: simple test"
+);
+
+test_parses_as(
+  'not exists "X-Spam"',
+  negate(test(exists => 'X-Spam')),
+  "parse_test: negated test"
+);
+
+test_parses_as(
+  'allof (address :is :all "x-delivered-to" "bruce@example.com", header :contains "from" ["postmaster", "daemon"])',
+  allof(
+    test(address => { is => undef, all => undef }, 'x-delivered-to', 'bruce@example.com'),
+    test(header  => { contains => undef }, 'from', qstr(['postmaster', 'daemon'])),
+  ),
+  "parse_test: the real-world allof that motivated this"
+);
+
+test_parses_as(
+  'not anyof (true, false)',
+  noneof(test('true'), test('false')),
+  "parse_test: not anyof becomes noneof"
+);
+
 done_testing;
