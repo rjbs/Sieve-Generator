@@ -22,9 +22,20 @@ is escaped to C<..>.
 
 has text => (is => 'ro', required => 1);
 
+=attr comment
+
+This attribute holds an optional hash comment that appears on the C<text:>
+line, as allowed by RFC 5228.  If set, it renders as C<text: # comment>.
+
+=cut
+
+has comment => (is => 'ro');
+
 sub as_sieve ($self, $i = undef) {
   my $indent = q{  } x ($i // 0);
-  my $str = "${indent}text:\n" . $self->text;
+  my $str = "${indent}text:";
+  $str .= " # " . $self->comment if defined $self->comment;
+  $str .= "\n" . $self->text;
   $str .= "\n" unless $str =~ /\n\z/;
   $str =~ s/^\./../mg;
   return "$str.\n";

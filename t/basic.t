@@ -314,6 +314,12 @@ sieve_is(
   "heredoc escapes leading dots"
 );
 
+sieve_is(
+  Sieve::Generator::Element::Heredoc->new({ text => "body\n", comment => "This is a comment" }),
+  "text: # This is a comment\nbody\n.\n",
+  "heredoc with comment on text: line"
+);
+
 # noneof (also covers Junction noneof branch)
 sieve_is(
   ifelse(
