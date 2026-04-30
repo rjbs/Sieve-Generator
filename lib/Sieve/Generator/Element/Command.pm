@@ -110,6 +110,8 @@ sub children ($self) {
 }
 
 sub as_sieve ($self, $i = undef) {
+  $i //= 0;
+
   my $oneline = $self->_as_sieve_oneline($i);
 
   if (!$self->autowrap || length $oneline < 72) {

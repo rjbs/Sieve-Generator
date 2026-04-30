@@ -36,8 +36,8 @@ sub append ($self, @things) {
   return;
 }
 
-sub as_sieve ($self, $i = 0) {
-  my $class = ref $self;
+sub as_sieve ($self, $i = undef) {
+  $i //= 0;
 
   my $str = q{};
   my $indent = q{  } x $i;

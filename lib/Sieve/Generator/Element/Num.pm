@@ -46,7 +46,8 @@ has suffix => (
 );
 
 sub as_sieve ($self, $i = undef) {
-  return (q{  } x ($i // 0)) . $self->value . ($self->suffix // '');
+  $i //= 0;
+  return (q{  } x $i) . $self->value . ($self->suffix // '');
 }
 
 no Moo;

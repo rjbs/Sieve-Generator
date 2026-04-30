@@ -19,7 +19,9 @@ This attribute holds the text content of the comment.
 has content => (is => 'ro', required => 1);
 
 sub as_sieve ($self, $i = undef) {
-  my $indent = q{  } x ($i // 0);
+  $i //= 0;
+
+  my $indent = q{  } x $i;
   return "${indent}/* " . $self->content . " */";
 }
 

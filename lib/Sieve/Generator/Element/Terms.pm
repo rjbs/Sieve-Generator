@@ -24,7 +24,9 @@ has terms => (is => 'ro', required => 1);
 sub children ($self) { grep { ref } $self->terms->@* }
 
 sub as_sieve ($self, $i = undef) {
-  my $str = (q{  } x ($i // 0))
+  $i //= 0;
+
+  my $str = (q{  } x $i)
           . join q{ },
             map {; ref($_) ? $_->as_sieve : $_ }
             $self->terms->@*;

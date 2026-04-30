@@ -32,6 +32,7 @@ sub children ($self) { ref $self->content ? ($self->content) : () }
 
 sub as_sieve ($self, $i = undef) {
   $i //= 0;
+
   my $sieve = ref $self->content
             ? $self->content->as_sieve(0)
             : $self->content;

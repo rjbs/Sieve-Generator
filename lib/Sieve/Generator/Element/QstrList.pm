@@ -20,6 +20,8 @@ This attribute holds the arrayref of strings to be encoded.
 has strs => (is => 'ro', init_arg => 'strs', required => 1);
 
 sub as_sieve ($self, $i = undef) {
+  $i //= 0;
+
   state $JSON = JSON::MaybeXS->new->utf8(0)->allow_nonref;
 
   my $str = join q{, }, map {;
@@ -27,7 +29,7 @@ sub as_sieve ($self, $i = undef) {
     $JSON->encode("$_")
   } $self->strs->@*;
 
-  return (q{  } x ($i // 0)) . "[ $str ]";
+  return (q{  } x $i) . "[ $str ]";
 }
 
 no Moo;

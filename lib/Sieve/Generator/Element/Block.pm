@@ -22,7 +22,8 @@ has _things => (is => 'ro', init_arg => 'things', required => 1);
 sub things ($self) { $self->_things->@* }
 sub children ($self) { $self->things }
 
-sub as_sieve ($self, $i = 0) {
+sub as_sieve ($self, $i = undef) {
+  $i //= 0;
   my $class = ref $self;
 
   my $str = q{};

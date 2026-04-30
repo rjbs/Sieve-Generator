@@ -32,7 +32,9 @@ line, as allowed by RFC 5228.  If set, it renders as C<text: # comment>.
 has comment => (is => 'ro');
 
 sub as_sieve ($self, $i = undef) {
-  my $indent = q{  } x ($i // 0);
+  $i //= 0;
+
+  my $indent = q{  } x $i;
   my $str = "${indent}text:";
   $str .= " # " . $self->comment if defined $self->comment;
   $str .= "\n" . $self->text;

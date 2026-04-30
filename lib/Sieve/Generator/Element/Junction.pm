@@ -32,7 +32,8 @@ sub things ($self) { $self->_things->@* }
 sub children ($self) { $self->things }
 
 sub as_sieve ($self, $i = undef) {
-  my $indent = q{  } x ($i // 0);
+  $i //= 0;
+  my $indent = q{  } x $i;
 
   my $type  = $self->type;
   my $func  = $type eq 'anyof'  ? 'anyof'
