@@ -110,7 +110,7 @@ parses_as(
 
 parses_as(
   'if true { stop; }',
-  sieve(ifelse('true', block(command('stop')))),
+  sieve(ifelse(test('true'), block(command('stop')))),
   "if true"
 );
 
@@ -124,7 +124,7 @@ parses_as(
 
 parses_as(
   'if true { stop; } else { keep; }',
-  sieve(ifelse('true', block(command('stop')), block(command('keep')))),
+  sieve(ifelse(test('true'), block(command('stop')), block(command('keep')))),
   "if/else"
 );
 
@@ -133,8 +133,8 @@ parses_as(
 parses_as(
   'if true { stop; } elsif false { keep; } else { discard; }',
   sieve(ifelse(
-    'true', block(command('stop')),
-    'false', block(command('keep')),
+    test('true'), block(command('stop')),
+    test('false'), block(command('keep')),
     block(command('discard')),
   )),
   "if/elsif/else"
@@ -178,7 +178,7 @@ parses_as(
 
 parses_as(
   'if true { if false { stop; } }',
-  sieve(ifelse('true', block(ifelse('false', block(command('stop')))))),
+  sieve(ifelse(test('true'), block(ifelse(test('false'), block(command('stop')))))),
   "nested if"
 );
 
