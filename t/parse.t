@@ -93,6 +93,14 @@ parses_as(
 );
 
 parses_as(
+  "reject text: # a note\nGo away.\n.\n;",
+  sieve(command('reject', Sieve::Generator::Element::Heredoc->new({
+    text => "Go away.\n", comment => "a note",
+  }))),
+  "heredoc with comment on text: line"
+);
+
+parses_as(
   "reject text:\n..dot-stuffed\nnormal\n.\n;",
   sieve(command('reject', heredoc(".dot-stuffed\nnormal\n"))),
   "heredoc dot-unstuffing"

@@ -146,14 +146,16 @@ sub _next_token ($self) {
 sub _lex_multiline ($self) {
   # "text:" already consumed; skip optional whitespace and hash-comment, then
   # expect a line break.
-  $self->{text} =~ /\G[ \t]*(?:#[^\r\n]*)?\r?\n/gc
+  $self->{text} =~ /\G[ \t]*(?:#[ \t]?([^\r\n]*))?\r?\n/gc
     or Carp::croak("expected newline after text:");
+
+  my $comment = $1;
 
   my $body = '';
   while ($self->{text} =~ /\G([^\r\n]*)\r?\n/gc) {
     my $line = $1;
     if ($line eq '.') {
-      return [ 'MULTILINE', $body ];
+      return [ 'MULTILINE', $body, $comment ];
     }
     $line =~ s/\A\.//;  # dot-unstuffing
     $body .= "$line\n";
@@ -344,7 +346,10 @@ sub _parse_atom ($self) {
   }
 
   if ($tok->[0] eq 'MULTILINE') {
-    return Sieve::Generator::Element::Heredoc->new({ text => $tok->[1] });
+    return Sieve::Generator::Element::Heredoc->new({
+      text => $tok->[1],
+      (defined $tok->[2] ? (comment => $tok->[2]) : ()),
+    });
   }
 
   Carp::croak("expected string, number, or multiline; got $tok->[0]");
