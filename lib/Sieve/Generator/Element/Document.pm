@@ -23,19 +23,6 @@ has _things => (is => 'ro', init_arg => 'things', required => 1);
 sub things ($self) { $self->_things->@* }
 sub children ($self) { $self->things }
 
-=method append
-
-  $doc->append(@things);
-
-This method adds the given C<@things> to the end of the document's list.
-
-=cut
-
-sub append ($self, @things) {
-  push $self->_things->@*, @things;
-  return;
-}
-
 sub as_sieve ($self, $i = undef) {
   $i //= 0;
 

@@ -452,13 +452,6 @@ sieve_is(
   "command with tagged and positional heredoc args"
 );
 
-# Document::append
-{
-  my $doc = sieve(command('stop'));
-  $doc->append(command('keep'));
-  sieve_is($doc, "stop;\nkeep;\n", "Document::append");
-}
-
 sieve_is(
   ifelse(
     negate(test(foo => { is => undef }, 'xyz')),
