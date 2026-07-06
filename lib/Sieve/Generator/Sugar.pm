@@ -26,22 +26,25 @@ use Sub::Exporter -setup => [ qw(
 
   bool
   hasflag
+  negate
+  number
   qstr
   terms
   var_eq
   var_ne
 ) ];
 
-use Sieve::Generator::Lines::Block;
-use Sieve::Generator::Lines::Command;
-use Sieve::Generator::Lines::Comment;
-use Sieve::Generator::Lines::Document;
-use Sieve::Generator::Lines::Heredoc;
-use Sieve::Generator::Lines::IfElse;
-use Sieve::Generator::Lines::Junction;
-use Sieve::Generator::Text::Qstr;
-use Sieve::Generator::Text::QstrList;
-use Sieve::Generator::Text::Terms;
+use Sieve::Generator::Element::Block;
+use Sieve::Generator::Element::Command;
+use Sieve::Generator::Element::Comment;
+use Sieve::Generator::Element::Document;
+use Sieve::Generator::Element::Heredoc;
+use Sieve::Generator::Element::IfElse;
+use Sieve::Generator::Element::Junction;
+use Sieve::Generator::Element::Num;
+use Sieve::Generator::Element::Qstr;
+use Sieve::Generator::Element::QstrList;
+use Sieve::Generator::Element::Terms;
 
 =head1 SYNOPSIS
 
@@ -81,16 +84,16 @@ C<sv_sieve>, C<sv_ifelse>, C<sv_block>, and so on.
   my $comment = comment($text);
   my $comment = comment($text, { hashes => 2 });
 
-This function creates a L<Sieve::Generator::Lines::Comment> with the given
+This function creates a L<Sieve::Generator::Element::Comment> with the given
 content.  The content may be a plain string or an object doing
-L<Sieve::Generator::Text>.  The optional second argument is a hashref; its
+L<Sieve::Generator::Element>.  The optional second argument is a hashref; its
 C<hashes> key controls how many C<#> characters prefix each line, defaulting
 to one.
 
 =cut
 
 sub comment ($content, $arg = undef) {
-  return Sieve::Generator::Lines::Comment->new({
+  return Sieve::Generator::Element::Comment->new({
     ($arg ? %$arg : ()),
     content => $content,
   });
@@ -100,9 +103,9 @@ sub comment ($content, $arg = undef) {
 
   my $cmd = command($identifier, (\%tagged?), @args);
 
-This function creates a L<Sieve::Generator::Lines::Command> with the given
+This function creates a L<Sieve::Generator::Element::Command> with the given
 identifier and arguments.  Arguments may be plain strings or objects doing
-L<Sieve::Generator::Text>.  The command renders as a semicolon-terminated
+L<Sieve::Generator::Element>.  The command renders as a semicolon-terminated
 Sieve statement.
 
 =cut
@@ -121,22 +124,22 @@ my sub _command ($identifier, $meta_arg, @args) {
       # ...but there's currently
       $tagged_args->{$k} = !defined $v  ? []
                          : blessed($v)  ? [ $v ]
-                         : !ref $v      ? [ Sieve::Generator::Text::Qstr->new({ str => $v }) ]
-                         : _ARRAY0($v)  ? [ Sieve::Generator::Text::QstrList->new({ strs => $v }) ]
-                         : _SCALAR0($v) ? [ Sieve::Generator::Text::Terms->new({ terms => [$$v] }) ]
+                         : !ref $v      ? [ Sieve::Generator::Element::Qstr->new({ str => $v }) ]
+                         : _ARRAY0($v)  ? [ Sieve::Generator::Element::QstrList->new({ strs => $v }) ]
+                         : _SCALAR0($v) ? [ Sieve::Generator::Element::Terms->new({ terms => [$$v] }) ]
                          : Carp::confess("unknown reference type $v passed in Sieve command sugar's tagged args");
     }
   }
 
   my @autoquoted_args = map {;
                            blessed($_)  ? $_
-                         : !ref $_      ? Sieve::Generator::Text::Qstr->new({ str => $_ })
-                         : _ARRAY0($_)  ? Sieve::Generator::Text::QstrList->new({ strs => $_ })
-                         : _SCALAR0($_) ? Sieve::Generator::Text::Terms->new({ terms => [$$_] })
+                         : !ref $_      ? Sieve::Generator::Element::Qstr->new({ str => $_ })
+                         : _ARRAY0($_)  ? Sieve::Generator::Element::QstrList->new({ strs => $_ })
+                         : _SCALAR0($_) ? Sieve::Generator::Element::Terms->new({ terms => [$$_] })
                          : Carp::confess("unknown reference type $_ passed in Sieve command sugar's positional args");
                         } @args;
 
-  return Sieve::Generator::Lines::Command->new({
+  return Sieve::Generator::Element::Command->new({
     %$meta_arg,
 
     identifier  => $identifier,
@@ -153,7 +156,7 @@ sub command ($identifier, @args) {
 
   my $test = test($identifier, (\%tagged?), @args);
 
-This function creates a L<Sieve::Generator::Lines::Command> with the given
+This function creates a L<Sieve::Generator::Element::Command> with the given
 identifier and arguments -- and semicolon-at-the-end turned off.  In the
 future, this might produce a distinct object, but for now, and really in Sieve,
 commands and tests are I<nearly> the same thing.
@@ -168,18 +171,18 @@ sub test ($identifier, @args) {
 
   my $cmd = set($variable, $value);
 
-This function creates a L<Sieve::Generator::Lines::Command> for the Sieve
+This function creates a L<Sieve::Generator::Element::Command> for the Sieve
 C<set> command (RFC 5229).  Both C<$variable> and C<$value> are automatically
 quoted as Sieve strings.
 
 =cut
 
 sub set ($var, $val) {
-  return Sieve::Generator::Lines::Command->new({
+  return Sieve::Generator::Element::Command->new({
     identifier => 'set',
     positional_args => [
-      Sieve::Generator::Text::Qstr->new({ str => $var }),
-      Sieve::Generator::Text::Qstr->new({ str => $val }),
+      Sieve::Generator::Element::Qstr->new({ str => $var }),
+      Sieve::Generator::Element::Qstr->new({ str => $val }),
     ],
   });
 }
@@ -189,7 +192,7 @@ sub set ($var, $val) {
   my $if = ifelse($condition, $block);
   my $if = ifelse($cond, $if_block, [ $condN, $elsif_blockN ] ..., $else_block);
 
-This function creates a L<Sieve::Generator::Lines::IfElse>.  The first two
+This function creates a L<Sieve::Generator::Element::IfElse>.  The first two
 arguments are the condition and the block to execute when it is true.
 Additional condition/block pairs render as C<elsif> clauses.  If the total
 number of trailing arguments is odd, the final argument is used as the plain
@@ -200,7 +203,7 @@ C<else> block.
 sub ifelse ($cond, $if_true, @rest) {
   my $else = @rest % 2 ? (pop @rest) : undef;
 
-  return Sieve::Generator::Lines::IfElse->new({
+  return Sieve::Generator::Element::IfElse->new({
     cond   => $cond,
     true   => $if_true,
     elsifs => \@rest,
@@ -212,55 +215,55 @@ sub ifelse ($cond, $if_true, @rest) {
 
   my $blank = blank();
 
-This function creates an empty L<Sieve::Generator::Lines::Document>.  It is
+This function creates an empty L<Sieve::Generator::Element::Document>.  It is
 typically used to insert a blank line between sections of a Sieve script.
 
 =cut
 
 sub blank () {
-  return Sieve::Generator::Lines::Document->new({ things => [] });
+  return Sieve::Generator::Element::Document->new({ things => [] });
 }
 
 =func sieve
 
   my $doc = sieve(@things);
 
-This function creates a L<Sieve::Generator::Lines::Document> from the given
+This function creates a L<Sieve::Generator::Element::Document> from the given
 C<@things>.  The document is the top-level container for a Sieve script; its
 C<as_sieve> method renders the full script as a string.
 
 =cut
 
 sub sieve (@things) {
-  return Sieve::Generator::Lines::Document->new({ things => \@things });
+  return Sieve::Generator::Element::Document->new({ things => \@things });
 }
 
 =func block
 
   my $block = block(@things);
 
-This function creates a L<Sieve::Generator::Lines::Block> containing the
+This function creates a L<Sieve::Generator::Element::Block> containing the
 given C<@things>.  A block renders as a brace-delimited, indented sequence of
 statements, as used in Sieve C<if>/C<elsif>/C<else> constructs.
 
 =cut
 
 sub block (@things) {
-  return Sieve::Generator::Lines::Block->new({ things => \@things });
+  return Sieve::Generator::Element::Block->new({ things => \@things });
 }
 
 =func allof
 
   my $test = allof(@tests);
 
-This function creates a L<Sieve::Generator::Lines::Junction> that renders as
+This function creates a L<Sieve::Generator::Element::Junction> that renders as
 a Sieve C<allof(...)> test, which is true only when all of the given tests
 are true.
 
 =cut
 
 sub allof (@things) {
-  return Sieve::Generator::Lines::Junction->new({
+  return Sieve::Generator::Element::Junction->new({
     type => 'allof',
     things => \@things,
   });
@@ -270,14 +273,14 @@ sub allof (@things) {
 
   my $test = anyof(@tests);
 
-This function creates a L<Sieve::Generator::Lines::Junction> that renders as
+This function creates a L<Sieve::Generator::Element::Junction> that renders as
 a Sieve C<anyof(...)> test, which is true when any of the given tests is
 true.
 
 =cut
 
 sub anyof (@things) {
-  return Sieve::Generator::Lines::Junction->new({
+  return Sieve::Generator::Element::Junction->new({
     type => 'anyof',
     things => \@things,
   });
@@ -287,14 +290,14 @@ sub anyof (@things) {
 
   my $test = noneof(@tests);
 
-This function creates a L<Sieve::Generator::Lines::Junction> that renders as
+This function creates a L<Sieve::Generator::Element::Junction> that renders as
 a Sieve C<not anyof(...)> test, which is true only when none of the given
 tests are true.
 
 =cut
 
 sub noneof (@things) {
-  return Sieve::Generator::Lines::Junction->new({
+  return Sieve::Generator::Element::Junction->new({
     type => 'noneof',
     things => \@things,
   });
@@ -304,23 +307,23 @@ sub noneof (@things) {
 
   my $terms = terms(@terms);
 
-This function creates a L<Sieve::Generator::Text::Terms> from the given
+This function creates a L<Sieve::Generator::Element::Terms> from the given
 C<@terms>.  Each term may be a plain string or an object doing
-L<Sieve::Generator::Text>; all terms are joined with single spaces when
+L<Sieve::Generator::Element>; all terms are joined with single spaces when
 rendered.  This is the general-purpose constructor for Sieve test expressions
 and argument sequences.
 
 =cut
 
 sub terms (@terms) {
-  return Sieve::Generator::Text::Terms->new({ terms => \@terms });
+  return Sieve::Generator::Element::Terms->new({ terms => \@terms });
 }
 
 =func heredoc
 
   my $hd = heredoc($text);
 
-This function creates a L<Sieve::Generator::Lines::Heredoc> containing the
+This function creates a L<Sieve::Generator::Element::Heredoc> containing the
 given C<$text>.  The text renders using the Sieve C<text:>/C<.> multiline
 string syntax.  Any line beginning with C<.> is automatically escaped to
 C<..>.
@@ -328,7 +331,26 @@ C<..>.
 =cut
 
 sub heredoc ($text) {
-  return Sieve::Generator::Lines::Heredoc->new({ text => $text });
+  return Sieve::Generator::Element::Heredoc->new({ text => $text });
+}
+
+=func number
+
+  my $num = number($value);
+  my $num = number($value, $suffix);
+
+This function creates a L<Sieve::Generator::Element::Num> that renders as a
+Sieve numeric literal (RFC 5228 section 2.4.1).  The C<$value> must be a
+non-negative integer.  The optional C<$suffix> is a size quantifier: C<K>,
+C<M>, or C<G> (case insensitive).
+
+=cut
+
+sub number ($value, $suffix = undef) {
+  return Sieve::Generator::Element::Num->new({
+    value  => $value,
+    (defined $suffix ? (suffix => $suffix) : ()),
+  });
 }
 
 =func qstr
@@ -338,8 +360,8 @@ sub heredoc ($text) {
   my $list = qstr(\@strings);
 
 This function creates Sieve string objects.  A plain scalar produces a
-L<Sieve::Generator::Text::Qstr> that renders as a quoted Sieve string.  An
-array reference produces a L<Sieve::Generator::Text::QstrList> that renders
+L<Sieve::Generator::Element::Qstr> that renders as a quoted Sieve string.  An
+array reference produces a L<Sieve::Generator::Element::QstrList> that renders
 as a bracketed Sieve string list.  When given a list of arguments, it maps
 over each and returns a corresponding list of objects.
 
@@ -347,8 +369,8 @@ over each and returns a corresponding list of objects.
 
 sub qstr (@inputs) {
   return map {;
-    ref ? Sieve::Generator::Text::QstrList->new({ strs => $_ })
-        : Sieve::Generator::Text::Qstr->new({ str => $_ })
+    ref ? Sieve::Generator::Element::QstrList->new({ strs => $_ })
+        : Sieve::Generator::Element::Qstr->new({ str => $_ })
   } @inputs;
 }
 
@@ -363,8 +385,31 @@ string.
 =cut
 
 sub hasflag ($flag) {
-  return Sieve::Generator::Text::Terms->new({
-    terms => [ 'hasflag', Sieve::Generator::Text::Qstr->new({ str => $flag }) ],
+  return Sieve::Generator::Element::Command->new({
+    autowrap  => 0,
+    semicolon => 0,
+
+    identifier      => 'hasflag',
+    positional_args => [ Sieve::Generator::Element::Qstr->new({ str => $flag }) ],
+  });
+}
+
+=func negate
+
+  my $test = negate($inner_test);
+
+This function wraps C<$inner_test> in a Sieve C<not> test, producing output
+like C<not foo :is "bar">.
+
+=cut
+
+sub negate ($test) {
+  return Sieve::Generator::Element::Command->new({
+    autowrap  => 0,
+    semicolon => 0,
+
+    identifier      => 'not',
+    positional_args => [ $test ],
   });
 }
 
@@ -372,14 +417,16 @@ sub hasflag ($flag) {
 
   my $test = bool($value);
 
-This function returns a Terms representing a literal C<true> or C<false>
+This function returns a test representing a literal C<true> or C<false>
 depending on the truthiness of C<$value>.
 
 =cut
 
 sub bool ($value) {
-  return Sieve::Generator::Text::Terms->new({
-    terms => [ $value ? 'true' : 'false' ],
+  return Sieve::Generator::Element::Command->new({
+    autowrap  => 0,
+    semicolon => 0,
+    identifier => $value ? 'true' : 'false',
   });
 }
 
@@ -393,14 +440,14 @@ the given value, by producing something like C<string :is "${$var}" "$value">.
 =cut
 
 sub var_eq ($var, $value) {
-  return Sieve::Generator::Lines::Command->new({
+  return Sieve::Generator::Element::Command->new({
     autowrap  => 0,
     semicolon => 0,
 
     identifier  => 'string',
     tagged_args => { is => [] },
     positional_args => [
-      Sieve::Generator::Text::Qstr->new({ str => "\${$var}" }),
+      Sieve::Generator::Element::Qstr->new({ str => "\${$var}" }),
       qstr($value),
     ],
   });
@@ -417,14 +464,14 @@ name equals the given value, by producing something like C<not string :is
 =cut
 
 sub var_ne ($var, $value) {
-  return Sieve::Generator::Lines::Command->new({
+  return Sieve::Generator::Element::Command->new({
     autowrap  => 0,
     semicolon => 0,
 
     identifier  => 'not string',
     tagged_args => { is => [] },
     positional_args => [
-      Sieve::Generator::Text::Qstr->new({ str => "\${$var}" }),
+      Sieve::Generator::Element::Qstr->new({ str => "\${$var}" }),
       qstr($value),
     ],
   });

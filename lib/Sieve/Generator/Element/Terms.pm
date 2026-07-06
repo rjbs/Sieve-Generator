@@ -1,9 +1,9 @@
 use v5.36.0;
-package Sieve::Generator::Text::Terms;
+package Sieve::Generator::Element::Terms;
 # ABSTRACT: a sequence of Sieve terms joined by spaces
 
 use Moo;
-with 'Sieve::Generator::Text';
+with 'Sieve::Generator::Element';
 
 =head1 DESCRIPTION
 
@@ -14,15 +14,19 @@ expressions and argument sequences.
 =attr terms
 
 This attribute holds the arrayref of terms.  Each term may be a plain string or
-an object doing L<Sieve::Generator::Text>; all terms are joined with single
+an object doing L<Sieve::Generator::Element>; all terms are joined with single
 spaces when rendered.
 
 =cut
 
 has terms => (is => 'ro', required => 1);
 
+sub children ($self) { grep { ref } $self->terms->@* }
+
 sub as_sieve ($self, $i = undef) {
-  my $str = (q{  } x ($i // 0))
+  $i //= 0;
+
+  my $str = (q{  } x $i)
           . join q{ },
             map {; ref($_) ? $_->as_sieve : $_ }
             $self->terms->@*;

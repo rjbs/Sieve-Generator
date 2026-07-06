@@ -1,9 +1,9 @@
 use v5.36.0;
-package Sieve::Generator::Lines::Heredoc;
+package Sieve::Generator::Element::Heredoc;
 # ABSTRACT: a Sieve multiline string (heredoc)
 
 use Moo;
-with 'Sieve::Generator::Lines';
+with 'Sieve::Generator::Element';
 
 =head1 DESCRIPTION
 
@@ -22,9 +22,22 @@ is escaped to C<..>.
 
 has text => (is => 'ro', required => 1);
 
+=attr comment
+
+This attribute holds an optional hash comment that appears on the C<text:>
+line, as allowed by RFC 5228.  If set, it renders as C<text: # comment>.
+
+=cut
+
+has comment => (is => 'ro');
+
 sub as_sieve ($self, $i = undef) {
-  my $indent = q{  } x ($i // 0);
-  my $str = "${indent}text:\n" . $self->text;
+  $i //= 0;
+
+  my $indent = q{  } x $i;
+  my $str = "${indent}text:";
+  $str .= " # " . $self->comment if defined $self->comment;
+  $str .= "\n" . $self->text;
   $str .= "\n" unless $str =~ /\n\z/;
   $str =~ s/^\./../mg;
   return "$str.\n";

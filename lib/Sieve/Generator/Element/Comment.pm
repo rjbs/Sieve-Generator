@@ -1,9 +1,9 @@
 use v5.36.0;
-package Sieve::Generator::Lines::Comment;
+package Sieve::Generator::Element::Comment;
 # ABSTRACT: a Sieve comment line
 
 use Moo;
-with 'Sieve::Generator::Lines';
+with 'Sieve::Generator::Element';
 
 =head1 DESCRIPTION
 
@@ -13,7 +13,7 @@ number of hash characters is configurable.
 =attr content
 
 This attribute holds the content of the comment.  It may be a plain string
-or an object doing L<Sieve::Generator::Text>.
+or an object doing L<Sieve::Generator::Element>.
 
 =cut
 
@@ -28,8 +28,11 @@ It defaults to C<1>.
 
 has hashes  => (is => 'ro', default  => 1);
 
+sub children ($self) { ref $self->content ? ($self->content) : () }
+
 sub as_sieve ($self, $i = undef) {
   $i //= 0;
+
   my $sieve = ref $self->content
             ? $self->content->as_sieve(0)
             : $self->content;

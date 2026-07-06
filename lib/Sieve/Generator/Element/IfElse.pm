@@ -1,9 +1,9 @@
 use v5.36.0;
-package Sieve::Generator::Lines::IfElse;
+package Sieve::Generator::Element::IfElse;
 # ABSTRACT: a Sieve if/elsif/else conditional construct
 
 use Moo;
-with 'Sieve::Generator::Lines';
+with 'Sieve::Generator::Element';
 
 =head1 DESCRIPTION
 
@@ -15,12 +15,12 @@ branch.
 =attr cond
 
 This attribute holds the condition for the C<if> clause.  It may be a plain
-string or an object doing L<Sieve::Generator::Text>.
+string or an object doing L<Sieve::Generator::Element>.
 
 =attr true
 
 This attribute holds the block or command to execute when the C<if> condition
-is true.  It should be an object doing L<Sieve::Generator::Lines>.
+is true.  It should be an object doing L<Sieve::Generator::Element>.
 
 =attr elsifs
 
@@ -40,6 +40,13 @@ has true    => (is => 'ro', required => 1, init_arg => 'true');
 has elsifs  => (is => 'ro');
 has else    => (is => 'ro');
 
+sub children ($self) {
+  my @children = ($self->cond, $self->true);
+  push @children, $self->elsifs->@* if $self->elsifs;
+  push @children, $self->else if $self->else;
+  return @children;
+}
+
 sub as_sieve ($self, $i = undef) {
   $i //= 0;
   my $indent = q{  } x $i;
@@ -50,12 +57,10 @@ sub as_sieve ($self, $i = undef) {
 
   use experimental qw(for_list);
   for my ($cond, $block) ($self->cond, $self->true, ($self->elsifs ? $self->elsifs->@* : ())) {
-    my $cond_str = ref $cond ? $cond->as_sieve($i) : $cond;
-    $cond_str =~ s/\A\Q$indent\E// if ref $cond;
-    chomp $cond_str;
+    my $cond_str = $cond->as_sieve($i);
+    $cond_str =~ s/\A\Q$indent\E//;
 
     if ($in_else) {
-      chomp $str;
       $str .= " elsif $cond_str " . $block->as_sieve($i);
     } else {
       $str .= $indent . "if $cond_str " . $block->as_sieve($i);
@@ -64,7 +69,6 @@ sub as_sieve ($self, $i = undef) {
   }
 
   if ($self->else) {
-    chomp $str;
     $str .= " else " . $self->else->as_sieve($i);
   }
 

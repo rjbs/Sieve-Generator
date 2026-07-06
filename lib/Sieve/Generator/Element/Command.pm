@@ -1,9 +1,9 @@
 use v5.36.0;
-package Sieve::Generator::Lines::Command;
+package Sieve::Generator::Element::Command;
 # ABSTRACT: a single Sieve command statement
 
 use Moo;
-with 'Sieve::Generator::Lines';
+with 'Sieve::Generator::Element';
 
 use Params::Util qw(_ARRAY0);
 
@@ -47,11 +47,23 @@ has autowrap => (
   default => 1,
 );
 
+=attr block
+
+This attribute holds an optional L<Sieve::Generator::Element::Block> to render
+after the arguments instead of a semicolon.  This models the Sieve grammar rule
+C<command = identifier arguments ( ";" / block )> for commands like
+C<foreverypart> that take a block body.  When set, the C<semicolon> attribute
+is ignored.
+
+=cut
+
+has block => (is => 'ro');
+
 =attr tagged_args
 
 This attribute holds the list of tagged arguments to the command, given as a
 hashref.  The values in the hashref will be array references of objects doing
-L<Sieve::Generator::Text>, which will follow the tag name.
+L<Sieve::Generator::Element>, which will follow the tag name.
 
 The accessor will return a list of pairs.
 
@@ -71,7 +83,7 @@ sub tagged_args ($self) {
 =attr positional_args
 
 This attribute holds the list of positional arguments to the command.  Each
-argument should be an object doing L<Sieve::Generator::Text>.
+argument should be an object doing L<Sieve::Generator::Element>.
 
 =cut
 
@@ -83,7 +95,23 @@ has _positional_args => (
 
 sub positional_args { $_[0]->_positional_args->@* }
 
+sub children ($self) {
+  my @children;
+
+  my @tagged_pairs = $self->tagged_args;
+  while (my ($name, $values) = splice @tagged_pairs, 0, 2) {
+    push @children, @$values;
+  }
+
+  push @children, $self->positional_args;
+  push @children, $self->block if $self->block;
+
+  return @children;
+}
+
 sub as_sieve ($self, $i = undef) {
+  $i //= 0;
+
   my $oneline = $self->_as_sieve_oneline($i);
 
   if (!$self->autowrap || length $oneline < 72) {
@@ -101,15 +129,23 @@ sub _as_sieve_oneline ($self, $i = undef) {
   my @tagged_pairs = $self->tagged_args;
   while (my ($name, $values) = splice @tagged_pairs, 0, 2) {
     $str .= " :$name";
-    if (@$values) {
-      $str .= " " . join(q{ }, map {; $_->as_sieve(0) } @$values);
+    for my $v (@$values) {
+      my $rendered = $v->as_sieve(0);
+      $str .= $str =~ /\n\z/ ? $rendered : " $rendered";
     }
   }
 
-  $str .= ' ' . (ref $_ ? $_->as_sieve(0) : $_) for $self->positional_args;
+  for my $arg ($self->positional_args) {
+    my $rendered = $arg->as_sieve(0);
+    $str .= $str =~ /\n\z/ ? $rendered : " $rendered";
+  }
 
-  $str .= ";" if $self->semicolon;
-  $str .= "\n";
+  if ($self->block) {
+    my $blk = $self->block->as_sieve($i // 0);
+    $str .= $str =~ /\n\z/ ? $blk : " $blk";
+  } elsif ($self->semicolon) {
+    $str .= ";";
+  }
 
   return $str;
 }
@@ -133,11 +169,16 @@ sub _as_sieve_multiline ($self, $i = undef) {
     $str .= "$name";
 
     if (@$values) {
-      $str .= " " . join(q{ }, map {; ref ? $_->as_sieve(0) : $_ } @$values);
+      $str .= " " . join(q{ }, map {; $_->as_sieve(0) } @$values);
     }
 
-    $str .= ";" if $self->semicolon && !@pair_queue;
-    $str .= "\n";
+    if (@pair_queue) {
+      $str .= "\n";
+    } elsif ($self->block) {
+      $str .= " " . $self->block->as_sieve($i // 0);
+    } elsif ($self->semicolon) {
+      $str .= ";";
+    }
   }
 
   return $str;

@@ -1,9 +1,9 @@
 use v5.36.0;
-package Sieve::Generator::Lines::Junction;
+package Sieve::Generator::Element::Junction;
 # ABSTRACT: a Sieve allof/anyof/noneof test
 
 use Moo;
-with 'Sieve::Generator::Lines';
+with 'Sieve::Generator::Element';
 
 =head1 DESCRIPTION
 
@@ -21,8 +21,7 @@ C<anyof>, or C<noneof>.
 =attr things
 
 This attribute holds the list of tests in the junction.  Each may be a plain
-string or an object doing L<Sieve::Generator::Lines> or
-L<Sieve::Generator::Text>.
+string or an object doing L<Sieve::Generator::Element>.
 
 =cut
 
@@ -30,9 +29,11 @@ has type => (is => 'ro', required => 1);
 
 has _things => (is => 'ro', init_arg => 'things', required => 1);
 sub things ($self) { $self->_things->@* }
+sub children ($self) { $self->things }
 
 sub as_sieve ($self, $i = undef) {
-  my $indent = q{  } x ($i // 0);
+  $i //= 0;
+  my $indent = q{  } x $i;
 
   my $type  = $self->type;
   my $func  = $type eq 'anyof'  ? 'anyof'
@@ -44,13 +45,12 @@ sub as_sieve ($self, $i = undef) {
 
   my @strs;
   for my $thing ($self->things) {
-    my $substr = ref $thing ? $thing->as_sieve($i+1) : $thing;
-    chomp $substr;
+    my $substr = $thing->as_sieve($i+1);
     push @strs, $substr;
   }
 
   $str .= join qq{,\n}, @strs;
-  $str .= "\n${indent})\n";
+  $str .= "\n${indent})";
 
   return $str;
 }
