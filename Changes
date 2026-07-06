@@ -1,6 +1,8 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+
+0.003     2026-07-05 20:25:47-04:00 America/New_York
         - Element: a new role for all "things that can turn into Sieve"; this
           covers Lines and Block
         - Document: eliminate "append"; documents are now meant to be immutable
